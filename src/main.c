@@ -2,23 +2,18 @@
 // needs to be replaced, of course...
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "net.h"
+#include "irc.h"
+
+static const char host [] = "localhost", port [] = "1337";
 
 int main (void)
 {
-	int s = net_connect ("localhost", "1337");
+	ircclient_t c;
 
-	net_send (s, "NICK ispolin\r\n", 128);
-	net_send (s, "USER ispolin 8 * :fuck\r\n", 128);
-	sleep (1);
-	net_send (s, "JOIN #test\r\n", 128);
-
-	for (;;)
-	{
-		sleep (20);
-		net_send (s, "PONG :entryway\r\n", 128);
-	}
+	irc_init (&c, host, port);
 
 	return 0;
 }

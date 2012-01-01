@@ -34,8 +34,10 @@
 #endif 
 
 #define eprint(fatal, s, ...) \
+	{ \
 	fprintf (stderr, "[\033[1;31;40m!\033[0m] " s "\n", ##__VA_ARGS__); \
-	if (fatal) exit (1)
+	if (fatal) exit (1); \
+	}
 
 #define assert(E) \
 	if (!(E)) { eprint (1, "Assertion at %s:%i failed.", __FILE__, __LINE__) }

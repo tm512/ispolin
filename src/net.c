@@ -16,6 +16,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <errno.h>
@@ -90,7 +91,7 @@ int net_connect (const char *host, const char *port)
 
 // Attempts to send len bytes from buf to sock
 // Returns the number of bytes that failed to send, or -1 with invalid args
-int net_send (int sock, const char *buf, unsigned int len)
+int net_send (int sock, char *buf, unsigned int len)
 {
 	int totalSent = 0, tempSent = 0, sendTries = 0;
 
@@ -120,7 +121,7 @@ int net_send (int sock, const char *buf, unsigned int len)
 
 // Attempts to receive len bytes from sock to buf
 // Returns the amount of data read, or -1 with invalid args
-int net_recv (int sock, const char *buf, unsigned int len)
+int net_recv (int sock, char *buf, unsigned int len)
 {
 	int totalRecv = 0, tempRecv = 0, recvTries = 0;
 
@@ -146,4 +147,10 @@ int net_recv (int sock, const char *buf, unsigned int len)
 	}
 
 	return totalRecv;
+}
+
+// Wrapper for close()
+int net_close (int sock)
+{
+	return sock >= 0 ? close (sock) : -1;
 }

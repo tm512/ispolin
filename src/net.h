@@ -19,7 +19,8 @@
 #define NET_H__
 
 int net_connect (const char *host, const char *port);
-int net_send (int sock, const char *buf, unsigned int len);
-int net_recv (int sock, const char *buf, unsigned int len);
+int net_send (int sock, char *buf, unsigned int len);
+int net_recv (int sock, char *buf, unsigned int len);
+int net_close (int sock);
 
 #endif // NET_H__
