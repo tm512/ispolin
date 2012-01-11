@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as
@@ -24,7 +24,7 @@
 #include "net.h"
 #include "irc.h"
 
-#define RECVBUF 512 // 512B of buffer for irc_getline
+#define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
 #define VERSIONTEST "0.0.1"
 
 // Initializes an ircclient_t, then starts its loop
@@ -37,9 +37,9 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 	cl->host = host;
 	cl->port = port;
 
-	cl->buf = (char *) malloc (RECVBUF);
+	cl->rbuf = (char *) malloc (MAXBUF);
 
-	if (!cl->buf)
+	if (!cl->rbuf)
 		eprint (1, "malloc failed for cl->buf, aborting!");
 
 	while (running && conn_attempts <= 5)
@@ -55,23 +55,63 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 		// Success, reset connection attempt count
 		conn_attempts = 0;
 
-		irc_sendln (cl, "NICK ispolin");
-		irc_sendln (cl, "USER ispolin 8 *: ispolin %s", VERSIONTEST);
-		sleep (3);
-		irc_sendln (cl, "JOIN #test");
-		for (;;);
+		// Login:
+		if (irc_login (cl, "ispolin") != 0)
+		{
+			conn_attempts ++;
+			continue;
+		}
+
+		for (;;)
+		{
+			char buf [MAXBUF] = { 0 };
+			irc_getln (cl, buf);
+			usleep (10000);
+		}
 	}
 
 	return;
 }
 
+int irc_login (ircclient_t *cl, char *nick)
+{
+	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :ispolin", nick);
+}
+
+int irc_getln (ircclient_t *cl, char *buf)
+{
+	char *pos = NULL;
+	char tmpbuf [MAXBUF] = { 0 };
+
+	while ((pos = strstr (cl->rbuf, "\r\n")) == NULL)
+	{
+		memset (tmpbuf, 0, MAXBUF);
+
+		if (net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf)) <= 0) // failed to recieve anything
+			return 1;
+
+		// Copy tmpbuf into the recvbuf
+		memcpy (cl->rbuf + strlen (cl->rbuf), tmpbuf, MAXBUF - strlen (cl->rbuf));
+	}
+
+	// Copy recvbuf into buf
+	memcpy (buf, cl->rbuf, pos + 2 - cl->rbuf);
+
+	// shift the recvbuf back
+	memset (tmpbuf, 0, MAXBUF);
+	memcpy (tmpbuf, pos + 2, MAXBUF - (pos + 2 - cl->rbuf));
+	memcpy (cl->rbuf, tmpbuf, MAXBUF);
+
+	return 0;
+}
+
 int irc_sendln (ircclient_t *cl, char *fmt, ...)
 {
-	char buf [512]; // Oh no, magic numbers!
+	char buf [MAXBUF + 3]; // + 3 for \r\n\0 :|
 	va_list va;
 
 	va_start (va, fmt);
-	vsnprintf (buf, 509, fmt, va);
+	vsnprintf (buf, MAXBUF, fmt, va);
 	va_end (va);
 
 	int len = strlen (buf);
@@ -80,6 +120,5 @@ int irc_sendln (ircclient_t *cl, char *fmt, ...)
 	buf [len + 1] = '\n';
 	buf [len + 2] = '\0';
 
-	dprint ("Sending: %s", buf);
 	return net_send (cl->s, buf, strlen (buf));
 }

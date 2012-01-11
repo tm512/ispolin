@@ -7,7 +7,8 @@
 #include "net.h"
 #include "irc.h"
 
-static const char host [] = "localhost", port [] = "1337";
+static const char host [] = "irc.lostsig.net", port [] = "6667";
+// static const char host [] = "localhost", port [] = "1337";
 
 int main (void)
 {

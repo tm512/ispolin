@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as

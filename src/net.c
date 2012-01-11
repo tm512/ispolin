@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as
@@ -103,15 +103,9 @@ int net_send (int sock, char *buf, unsigned int len)
 		if ((tempSent = send (sock, buf + totalSent, len - totalSent, 0)) <= 0)
 		{
 			if (sendTries++ < MAXTRIES)
-			{
-				dprint ("send failed (attempt %i, returned %i)", sendTries, tempSent);
 				continue;
-			}
 			else
-			{
-				dprint ("send failed too many times, aborting! :O");
 				break;
-			}
 		}
 		totalSent += tempSent;
 	}
@@ -133,15 +127,9 @@ int net_recv (int sock, char *buf, unsigned int len)
 		if ((tempRecv = recv (sock, buf + totalRecv, len - totalRecv, 0)) <= 0)
 		{
 			if (recvTries++ < MAXTRIES)
-			{
-				dprint ("recv failed (attempt %i, returned %i)", recvTries, tempRecv);
 				continue;
-			}
 			else
-			{
-				dprint ("recv failed too many times, aborting! :O");
 				break;
-			}
 		}
 		totalRecv += tempRecv;
 	}
