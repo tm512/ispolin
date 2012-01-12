@@ -60,7 +60,7 @@ int net_connect (const char *host, const char *port)
 		fcntl (sock, F_SETFL, O_NONBLOCK);
 
 		if (connect (sock, r->ai_addr, r->ai_addrlen) < 0)
-			if (errno != EWOULDBLOCK && errno != EINPROGRESS)
+			if (errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN)
 				continue; // An error is to be expected, but it's not always an issue
 
 		// Wait for server response, check if we're connected or not
@@ -90,7 +90,7 @@ int net_connect (const char *host, const char *port)
 }
 
 // Attempts to send len bytes from buf to sock
-// Returns the number of bytes that failed to send, or -1 with invalid args
+// Returns the number of bytes that failed to send, or -1 with invalid args or failure to send
 int net_send (int sock, char *buf, unsigned int len)
 {
 	int totalSent = 0, tempSent = 0, sendTries = 0;
@@ -102,6 +102,9 @@ int net_send (int sock, char *buf, unsigned int len)
 	{
 		if ((tempSent = send (sock, buf + totalSent, len - totalSent, 0)) <= 0)
 		{
+			if (errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN)
+				return -1;
+
 			if (sendTries++ < MAXTRIES)
 				continue;
 			else
@@ -114,7 +117,7 @@ int net_send (int sock, char *buf, unsigned int len)
 }
 
 // Attempts to receive len bytes from sock to buf
-// Returns the amount of data read, or -1 with invalid args
+// Returns the amount of data read, or -1 with invalid args or failure to receive
 int net_recv (int sock, char *buf, unsigned int len)
 {
 	int totalRecv = 0, tempRecv = 0, recvTries = 0;
@@ -126,6 +129,12 @@ int net_recv (int sock, char *buf, unsigned int len)
 	{
 		if ((tempRecv = recv (sock, buf + totalRecv, len - totalRecv, 0)) <= 0)
 		{
+			if (errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN)
+				return -1;
+
+			if (!tempRecv) // got hung up on!
+				return -1;
+
 			if (recvTries++ < MAXTRIES)
 				continue;
 			else

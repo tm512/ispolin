@@ -29,6 +29,11 @@ typedef struct
 } ircclient_t;
 
 void irc_init (ircclient_t *cl, const char *host, const char *port);
+int irc_login (ircclient_t *cl, char *nick);
+int irc_join (ircclient_t *cl, char *chan);
+int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
+void irc_parse (ircclient_t *cl, char *buf);
+int irc_getln (ircclient_t *cl, char *buf);
 int irc_sendln (ircclient_t *cl, char *fmt, ...);
 
 #endif // IRC_H__

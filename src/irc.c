@@ -25,13 +25,13 @@
 #include "irc.h"
 
 #define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
-#define VERSIONTEST "0.0.1"
 
 // Initializes an ircclient_t, then starts its loop
 void irc_init (ircclient_t *cl, const char *host, const char *port)
 {
 	int running = 1;
 	int conn_attempts = 0;
+	char buf [MAXBUF] = { 0 };
 
 	cl->s = -1;
 	cl->host = host;
@@ -41,6 +41,8 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 
 	if (!cl->rbuf)
 		eprint (1, "malloc failed for cl->buf, aborting!");
+
+	memset (cl->rbuf, 0, MAXBUF);
 
 	while (running && conn_attempts <= 5)
 	{
@@ -52,9 +54,6 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 			continue;
 		}
 
-		// Success, reset connection attempt count
-		conn_attempts = 0;
-
 		// Login:
 		if (irc_login (cl, "ispolin") != 0)
 		{
@@ -62,47 +61,90 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 			continue;
 		}
 
-		for (;;)
+		// Success, reset connection attempt count
+		conn_attempts = 0;
+
+		while (irc_getln (cl, buf) >= 0)
 		{
-			char buf [MAXBUF] = { 0 };
-			irc_getln (cl, buf);
+			printf ("%s", buf);
+			irc_parse (cl, buf);
 			usleep (10000);
 		}
+
+		conn_attempts ++;
+		dprint ("reconnect");
 	}
 
 	return;
 }
 
+// Sends NICK and USER
 int irc_login (ircclient_t *cl, char *nick)
 {
 	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :ispolin", nick);
 }
 
+// Sends JOIN
+int irc_join (ircclient_t *cl, char *chan)
+{
+	return irc_sendln (cl, "JOIN %s", chan);
+}
+
+// Sends PRIVMSG
+int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
+{
+	char buf [MAXBUF] = { 0 };
+	va_list va;
+
+	va_start (va, message);
+	vsnprintf (buf, MAXBUF, message, va);
+	va_end (va);
+
+	return irc_sendln (cl, buf);
+}
+
+// Parses a line of text from IRC
+void irc_parse (ircclient_t *cl, char *buf)
+{
+	return;
+}	
+
+// fills up buf with a whole line, if possible
+// returns length of the line on success, 0 or -1 on failure
 int irc_getln (ircclient_t *cl, char *buf)
 {
+	int ret = 0;
 	char *pos = NULL;
 	char tmpbuf [MAXBUF] = { 0 };
+
+	// Clear the buffer we're sent
+	memset (buf, 0, MAXBUF);
 
 	while ((pos = strstr (cl->rbuf, "\r\n")) == NULL)
 	{
 		memset (tmpbuf, 0, MAXBUF);
 
-		if (net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf)) <= 0) // failed to recieve anything
-			return 1;
+		ret = net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf));
+
+		if (ret <= 0)
+		{
+			return ret; // error or nothing recieved
+		}
 
 		// Copy tmpbuf into the recvbuf
 		memcpy (cl->rbuf + strlen (cl->rbuf), tmpbuf, MAXBUF - strlen (cl->rbuf));
 	}
 
-	// Copy recvbuf into buf
+	// Copy line to buf, add \0
 	memcpy (buf, cl->rbuf, pos + 2 - cl->rbuf);
+	strstr (buf, "\r\n") [2] = '\0';
 
 	// shift the recvbuf back
 	memset (tmpbuf, 0, MAXBUF);
 	memcpy (tmpbuf, pos + 2, MAXBUF - (pos + 2 - cl->rbuf));
 	memcpy (cl->rbuf, tmpbuf, MAXBUF);
 
-	return 0;
+	return strlen (buf);
 }
 
 int irc_sendln (ircclient_t *cl, char *fmt, ...)
