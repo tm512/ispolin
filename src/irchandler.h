@@ -15,25 +15,24 @@
    along with Ispolin.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IRC_H__
-#define IRC_H__
+#ifndef IRCHANDLER_H__
+#define IRCHANDLER_H__
+
+typedef void (*linehandler_f) (char *nick, char *host, char *args);
 
 typedef struct
 {
-	int s; // Socket
+	const char *command;
+	linehandler_f func;
+} irchandler_t;
 
-	const char *host;
-	const char *port;
+void join_handler (char *nick, char *host, char *args);
+void privmsg_handler (char *nick, char *host, char *args);
 
-	char *rbuf; // Receive buffer, for irc_getln
-} ircclient_t;
+const irchandler_t irchandlers []
+{
+	{ "JOIN", &joinhandler },
+	{ "PRIVMSG", &privmsg_handler }
+}
 
-void irc_init (ircclient_t *cl, const char *host, const char *port);
-int irc_login (ircclient_t *cl, char *nick);
-int irc_join (ircclient_t *cl, char *chan);
-int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
-void irc_parse (ircclient_t *cl, char *buf, int *running);
-int irc_getln (ircclient_t *cl, char *buf);
-int irc_sendln (ircclient_t *cl, char *fmt, ...);
-
-#endif // IRC_H__
+#endif // IRCHANDLER_H__

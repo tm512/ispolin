@@ -67,12 +67,12 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 		while (irc_getln (cl, buf) >= 0)
 		{
 			printf ("%s", buf);
-			irc_parse (cl, buf);
+			irc_parse (cl, buf, &running);
 			usleep (10000);
 		}
 
+		eprint (0, "Connection to %s:%s lost.", cl->host, cl->port);
 		conn_attempts ++;
-		dprint ("reconnect");
 	}
 
 	return;
@@ -104,8 +104,39 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 }
 
 // Parses a line of text from IRC
-void irc_parse (ircclient_t *cl, char *buf)
+void irc_parse (ircclient_t *cl, char *buf, int *running)
 {
+	char tokbuf [strlen (buf)]; // For strtok_r
+	char *targ = NULL, *nick = NULL, *host = NULL, *cmd = NULL, args = NULL;
+
+	if (buf [0] != ':') // PING
+	{
+		if (!strncmp (buf, "PING", 4))
+		{
+			dprint ("<< PONG");
+			irc_sendln (cl, "PONG %s", &buf [5]);
+		}
+
+		return;
+	}
+
+	buf ++; // remove the leading ':'
+
+	targ = strtok_r (buf, " ", &tokbuf);
+
+	// Is this a server message, or a message from a user?
+	if (!strstr (targ, "!"))
+		nick = target; // This is a server message (host remains NULL)
+	else
+	{
+		char targbuf [strlen (targ)];
+		nick = strtok_r (targ, "!", &targbuf);
+		host = strtok_r (NULL, "!", &targbuf);
+	}
+
+	cmd = strtok_r (NULL, " ", &tokbuf);
+	args = strtok_r (NULL, " ", &tokbuf);
+
 	return;
 }	
 
@@ -127,9 +158,7 @@ int irc_getln (ircclient_t *cl, char *buf)
 		ret = net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf));
 
 		if (ret <= 0)
-		{
-			return ret; // error or nothing recieved
-		}
+			return ret;
 
 		// Copy tmpbuf into the recvbuf
 		memcpy (cl->rbuf + strlen (cl->rbuf), tmpbuf, MAXBUF - strlen (cl->rbuf));
