@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <alloca.h>
 
 #include "prints.h"
 #include "irchandler.h"
@@ -32,7 +33,7 @@ void join_handler (char *nick, char *host, char *args)
 
 void part_handler (char *nick, char *host, char *args)
 {
-	char tokbuf [strlen (args)];
+	char *tokbuf = alloca (strlen (args));
 	char *channel = strtok_r (args, " ", &tokbuf);
 	char *reason = strtok_r (NULL, " ", &tokbuf) + 1;
 

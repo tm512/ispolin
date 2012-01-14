@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <alloca.h>
 
 #include "prints.h"
 #include "net.h"
@@ -108,7 +109,7 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 void irc_parse (ircclient_t *cl, char *buf, int *running)
 {
 	int i;
-	char tokbuf [strlen (buf)]; // For strtok_r
+	char *tokbuf = alloca (strlen (buf)); // For strtok_r
 	char *targ = NULL, *nick = NULL, *host = NULL, *cmd = NULL, *args = NULL;
 
 	// Strip newlines and any whitespace at the end of the buffer:
@@ -135,7 +136,7 @@ void irc_parse (ircclient_t *cl, char *buf, int *running)
 		nick = targ; // This is a server message (host remains NULL)
 	else
 	{
-		char targbuf [strlen (targ)];
+		char *targbuf = alloca (strlen (targ));
 		nick = strtok_r (targ, "!", &targbuf);
 		host = strtok_r (NULL, "!", &targbuf);
 	}
