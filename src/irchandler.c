@@ -16,15 +16,27 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 
-#include <prints.h>
-#include <irchandler.h>
+#include "prints.h"
+#include "irchandler.h"
 
 void join_handler (char *nick, char *host, char *args)
 {
 	char *channel = strstr (args, ":") + 1;
 
 	iprint ("[%s] %s (%s) joins.", channel, nick, host);
+
+	return;
+}
+
+void part_handler (char *nick, char *host, char *args)
+{
+	char tokbuf [strlen (args)];
+	char *channel = strtok_r (args, " ", &tokbuf);
+	char *reason = strtok_r (NULL, " ", &tokbuf) + 1;
+
+	iprint ("[%s] %s (%s) parts [%s].", channel, nick, host, reason);
 
 	return;
 }

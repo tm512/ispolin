@@ -27,12 +27,14 @@ typedef struct
 } irchandler_t;
 
 void join_handler (char *nick, char *host, char *args);
+void part_handler (char *nick, char *host, char *args);
 void privmsg_handler (char *nick, char *host, char *args);
 
-const irchandler_t irchandlers []
+static const irchandler_t irchandlers [] = 
 {
-	{ "JOIN", &joinhandler },
+	{ "JOIN", &join_handler },
+	{ "PART", &part_handler },
 	{ "PRIVMSG", &privmsg_handler }
-}
+};
 
 #endif // IRCHANDLER_H__

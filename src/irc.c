@@ -23,6 +23,7 @@
 #include "prints.h"
 #include "net.h"
 #include "irc.h"
+#include "irchandler.h"
 
 #define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
 
@@ -48,7 +49,7 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 	{
 		net_close (cl->s);
 
-		if((cl->s = net_connect (cl->host, cl->port)) < 0)
+		if ((cl->s = net_connect (cl->host, cl->port)) < 0)
 		{
 			conn_attempts ++;
 			continue;
@@ -106,8 +107,13 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 // Parses a line of text from IRC
 void irc_parse (ircclient_t *cl, char *buf, int *running)
 {
+	int i;
 	char tokbuf [strlen (buf)]; // For strtok_r
-	char *targ = NULL, *nick = NULL, *host = NULL, *cmd = NULL, args = NULL;
+	char *targ = NULL, *nick = NULL, *host = NULL, *cmd = NULL, *args = NULL;
+
+	// Strip newlines and any whitespace at the end of the buffer:
+	while (strlen (buf) > 0 && isspace (buf [strlen (buf) - 1]))
+		buf [strlen (buf) - 1] = '\0';
 
 	if (buf [0] != ':') // PING
 	{
@@ -126,7 +132,7 @@ void irc_parse (ircclient_t *cl, char *buf, int *running)
 
 	// Is this a server message, or a message from a user?
 	if (!strstr (targ, "!"))
-		nick = target; // This is a server message (host remains NULL)
+		nick = targ; // This is a server message (host remains NULL)
 	else
 	{
 		char targbuf [strlen (targ)];
@@ -135,7 +141,18 @@ void irc_parse (ircclient_t *cl, char *buf, int *running)
 	}
 
 	cmd = strtok_r (NULL, " ", &tokbuf);
-	args = strtok_r (NULL, " ", &tokbuf);
+	args = cmd + strlen (cmd) + 1;
+
+	// Find the function for this command (there might not be one)
+	for (i = 0; i < (sizeof (irchandlers) / sizeof (irchandlers [0])); i++)
+	{
+		int cmp = strncmp (cmd, irchandlers [i].command, strlen (irchandlers [i].command));
+
+		if (!cmp)
+			irchandlers [i].func (nick, host, args);
+		else if (cmp < 0)
+			break;
+	}
 
 	return;
 }	
