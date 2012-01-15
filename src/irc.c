@@ -102,7 +102,8 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 	vsnprintf (buf, MAXBUF, message, va);
 	va_end (va);
 
-	return irc_sendln (cl, buf);
+	iprint ("[%s] <%s> %s", target, "ispolin", buf); // replace ispolin with bot nick when we get configs
+	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
 }
 
 // Parses a line of text from IRC
@@ -150,7 +151,7 @@ void irc_parse (ircclient_t *cl, char *buf, int *running)
 		int cmp = strncmp (cmd, irchandlers [i].command, strlen (irchandlers [i].command));
 
 		if (!cmp)
-			irchandlers [i].func (nick, host, args);
+			irchandlers [i].func (cl, nick, host, args);
 		else if (cmp < 0)
 			break;
 	}
