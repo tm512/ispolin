@@ -18,7 +18,7 @@
 #ifndef IRCHANDLER_H__
 #define IRCHANDLER_H__
 
-typedef void (*linehandler_f) (char *nick, char *host, char *args);
+typedef void (*linehandler_f) (ircclient_t *cl, char *nick, char *host, char *args);
 
 typedef struct
 {
@@ -26,12 +26,14 @@ typedef struct
 	linehandler_f func;
 } irchandler_t;
 
-void join_handler (char *nick, char *host, char *args);
-void part_handler (char *nick, char *host, char *args);
-void privmsg_handler (char *nick, char *host, char *args);
+void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void join_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void part_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args);
 
 static const irchandler_t irchandlers [] = 
 {
+	{ "376", &endmotd_handler },
 	{ "JOIN", &join_handler },
 	{ "PART", &part_handler },
 	{ "PRIVMSG", &privmsg_handler }

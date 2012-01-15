@@ -20,9 +20,18 @@
 #include <alloca.h>
 
 #include "prints.h"
+#include "irc.h"
 #include "irchandler.h"
+#include "module.h"
 
-void join_handler (char *nick, char *host, char *args)
+void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	irc_join (cl, "#bottest");
+
+	return;
+}
+
+void join_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
 	char *channel = strstr (args, ":") + 1;
 
@@ -31,18 +40,29 @@ void join_handler (char *nick, char *host, char *args)
 	return;
 }
 
-void part_handler (char *nick, char *host, char *args)
+void part_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
 	char *tokbuf = alloca (strlen (args));
 	char *channel = strtok_r (args, " ", &tokbuf);
-	char *reason = strtok_r (NULL, " ", &tokbuf) + 1;
+	char *reason = channel + strlen (channel) + 2;
 
 	iprint ("[%s] %s (%s) parts [%s].", channel, nick, host, reason);
 
 	return;
 }
 
-void privmsg_handler (char *nick, char *host, char *args)
+void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
+	char *tokbuf = alloca (strlen (args));
+	char *source = strtok_r (args, " ", &tokbuf);
+	char *message = source + strlen (source) + 2;
+
+	iprint ("[%s] <%s> %s", source, nick, message);
+
+	listener_t *l;
+	for (l = &privmsgListeners; l; l = l->next)
+		// privmsglistener_f func = (privmsglistener_f) l->func;
+		((privmsglistener_f) l->func) (cl, nick, host, source, message);
+
 	return;
 }
