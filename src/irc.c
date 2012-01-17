@@ -86,10 +86,13 @@ int irc_login (ircclient_t *cl, char *nick)
 	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :ispolin", nick);
 }
 
-// Sends JOIN
-int irc_join (ircclient_t *cl, char *chan)
+// Sends JOIN (with optional password)
+int irc_join (ircclient_t *cl, char *chan, char *pw)
 {
-	return irc_sendln (cl, "JOIN %s", chan);
+	if (pw)
+		return irc_sendln (cl, "JOIN %s %s", chan, pw);
+	else
+		return irc_sendln (cl, "JOIN %s", chan);
 }
 
 // Sends PRIVMSG

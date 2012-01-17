@@ -17,7 +17,7 @@ default: $(OUT) $(MODSOUT)
 
 $(MODSOUT):
 	@mkdir -p modules
-	cd $(patsubst modules/%.so,src/modules/%,$@); \
+	@cd $(patsubst modules/%.so,src/modules/%,$@); \
 	make CC=$(CC) LD=$(LD) OPT=$(OPT) DBG=$(DBG) BASEDIR=$(shell pwd) OUT=$(shell pwd)/$@ \
 	OBJDIR=$(shell pwd)/$(patsubst modules/%.so,$(MODOBJDIR)/%,$@) CFLAGS=$(CFLAGS)
 	@cd ../..

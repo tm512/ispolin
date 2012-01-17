@@ -26,7 +26,7 @@
 
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
-	irc_join (cl, "#bottest");
+	irc_join (cl, "#bottest", NULL);
 
 	return;
 }
@@ -61,7 +61,6 @@ void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 	listener_t *l;
 	for (l = &privmsgListeners; l; l = l->next)
-		// privmsglistener_f func = (privmsglistener_f) l->func;
 		((privmsglistener_f) l->func) (cl, nick, host, source, message);
 
 	return;
