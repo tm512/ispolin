@@ -47,6 +47,12 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		return;
 	}
 
+	if (strstr (message, ".quit") == message)
+	{
+		irc_quit (cl, "ispolin");
+		return;
+	}
+
 	return;
 }
 

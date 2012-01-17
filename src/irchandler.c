@@ -33,7 +33,12 @@ void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 void join_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
-	char *channel = strstr (args, ":") + 1;
+	char *channel;
+
+	if ((channel = strstr (args, ":")) == NULL)
+		channel = args;
+	else
+		channel += 1; // need to remove the ":"
 
 	iprint ("[%s] %s (%s) joins.", channel, nick, host);
 

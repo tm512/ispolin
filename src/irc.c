@@ -27,15 +27,20 @@
 #include "irchandler.h"
 
 #define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
+#define connsleep(time) \
+	iprint ("Sleeping for %i seconds before reconnecting.", time); \
+	sleep (time);
+#define stripw(str) \
+	while (strlen (str) > 0 && isspace (str [strlen (str) - 1])) str [strlen (str) - 1] = '\0';
 
 // Initializes an ircclient_t, then starts its loop
-void irc_init (ircclient_t *cl, const char *host, const char *port)
+int irc_init (ircclient_t *cl, const char *host, const char *port)
 {
-	int running = 1;
 	int conn_attempts = 0;
 	char buf [MAXBUF] = { 0 };
 
 	cl->s = -1;
+	cl->run = 1;
 	cl->host = host;
 	cl->port = port;
 
@@ -46,13 +51,14 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 
 	memset (cl->rbuf, 0, MAXBUF);
 
-	while (running && conn_attempts <= 5)
+	while (cl->run && conn_attempts <= 5)
 	{
 		net_close (cl->s);
 
 		if ((cl->s = net_connect (cl->host, cl->port)) < 0)
 		{
 			conn_attempts ++;
+			connsleep (1 << conn_attempts);
 			continue;
 		}
 
@@ -60,6 +66,7 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 		if (irc_login (cl, "ispolin") != 0)
 		{
 			conn_attempts ++;
+			connsleep (1 << conn_attempts);
 			continue;
 		}
 
@@ -69,15 +76,25 @@ void irc_init (ircclient_t *cl, const char *host, const char *port)
 		while (irc_getln (cl, buf) >= 0)
 		{
 			printf ("%s", buf);
-			irc_parse (cl, buf, &running);
+			irc_parse (cl, buf);
 			usleep (10000);
 		}
 
 		eprint (0, "Connection to %s:%s lost.", cl->host, cl->port);
 		conn_attempts ++;
+
+		if (cl->run)
+		{
+			connsleep (1 << conn_attempts);
+		}
 	}
 
-	return;
+	if (cl->run)
+	{
+		eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
+	}
+
+	return cl->run; // return whether we quit on purpose or not
 }
 
 // Sends NICK and USER
@@ -95,6 +112,13 @@ int irc_join (ircclient_t *cl, char *chan, char *pw)
 		return irc_sendln (cl, "JOIN %s", chan);
 }
 
+// Sends QUIT
+int irc_quit (ircclient_t *cl, char *msg)
+{
+	cl->run = 0;
+	return irc_sendln (cl, "QUIT :%s", msg);
+}
+
 // Sends PRIVMSG
 int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 {
@@ -105,20 +129,21 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 	vsnprintf (buf, MAXBUF, message, va);
 	va_end (va);
 
+	stripw (buf); // get rid of any extra newlines
+
 	iprint ("[%s] <%s> %s", target, "ispolin", buf); // replace ispolin with bot nick when we get configs
 	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
 }
 
 // Parses a line of text from IRC
-void irc_parse (ircclient_t *cl, char *buf, int *running)
+void irc_parse (ircclient_t *cl, char *buf)
 {
 	int i;
 	char *tokbuf = alloca (strlen (buf)); // For strtok_r
 	char *targ = NULL, *nick = NULL, *host = NULL, *cmd = NULL, *args = NULL;
 
 	// Strip newlines and any whitespace at the end of the buffer:
-	while (strlen (buf) > 0 && isspace (buf [strlen (buf) - 1]))
-		buf [strlen (buf) - 1] = '\0';
+	stripw (buf);
 
 	if (buf [0] != ':') // PING
 	{
@@ -200,6 +225,7 @@ int irc_getln (ircclient_t *cl, char *buf)
 
 int irc_sendln (ircclient_t *cl, char *fmt, ...)
 {
+	int len;
 	char buf [MAXBUF + 3]; // + 3 for \r\n\0 :|
 	va_list va;
 
@@ -207,7 +233,7 @@ int irc_sendln (ircclient_t *cl, char *fmt, ...)
 	vsnprintf (buf, MAXBUF, fmt, va);
 	va_end (va);
 
-	int len = strlen (buf);
+	len = strlen (buf);
 
 	buf [len] = '\r';
 	buf [len + 1] = '\n';
