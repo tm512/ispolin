@@ -75,7 +75,7 @@ int irc_init (ircclient_t *cl, const char *host, const char *port)
 
 		while (irc_getln (cl, buf) >= 0)
 		{
-			printf ("%s", buf);
+//			printf ("%s", buf);
 			irc_parse (cl, buf);
 			usleep (10000);
 		}
@@ -131,7 +131,7 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 
 	stripw (buf); // get rid of any extra newlines
 
-	iprint ("[%s] <%s> %s", target, "ispolin", buf); // replace ispolin with bot nick when we get configs
+	ircprint ("[%s] <%s> %s", target, "ispolin", buf); // replace ispolin with bot nick when we get configs
 	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
 }
 

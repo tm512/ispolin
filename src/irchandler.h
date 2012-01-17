@@ -28,6 +28,7 @@ typedef struct
 
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void join_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void notice_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void part_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args);
 
@@ -35,6 +36,7 @@ static const irchandler_t irchandlers [] =
 {
 	{ "376", &endmotd_handler },
 	{ "JOIN", &join_handler },
+	{ "NOTICE", &notice_handler },
 	{ "PART", &part_handler },
 	{ "PRIVMSG", &privmsg_handler }
 };
