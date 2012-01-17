@@ -29,7 +29,22 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	if (strstr (message, ".info") == message)
 	{
 		// todo: expand, of course...
-		irc_privmsg (cl, source, "Hi, I am an ispolin bot!");
+		irc_privmsg (cl, source, "Hi, I'm an ispolin bot!");
+		return;
+	}
+
+	if (strstr (message, ".uptime") == message)
+	{
+		FILE *uptime_pipe = popen ("uptime", "r");
+		char *uptime_out = alloca (96);
+
+		if (uptime_pipe && uptime_out)
+		{
+			fgets (uptime_out, 96, uptime_pipe);
+			irc_privmsg (cl, source, uptime_out);
+		}
+
+		return;
 	}
 
 	return;

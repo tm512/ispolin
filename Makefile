@@ -15,7 +15,7 @@ MODSOUT = $(patsubst src/modules/%,modules/%.so,$(MODS))
 
 default: $(OUT) $(MODSOUT)
 
-$(MODSOUT):
+$(MODSOUT): $(wildcard $(patsubst src/modules/%,src/modules/%/,$(MODS))/*.[ch])
 	@mkdir -p modules
 	@cd $(patsubst modules/%.so,src/modules/%,$@); \
 	make CC=$(CC) LD=$(LD) OPT=$(OPT) DBG=$(DBG) BASEDIR=$(shell pwd) OUT=$(shell pwd)/$@ \
