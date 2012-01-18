@@ -18,7 +18,7 @@
 #ifndef PRINTS_H__
 #define PRINTS_H__
 
-#define DEBUG 1
+#define DEBUG
 #undef assert // We want to use our own assert, so undefine if necessary
 
 /* convenient macros... */

@@ -7,16 +7,16 @@
 #include "net.h"
 #include "irc.h"
 #include "module.h"
+#include "config.h"
 
-static const char host [] = "crimson.lostsig.net", port [] = "6667";
-// static const char host [] = "localhost", port [] = "1337";
+ircclient_t *clients [MAXCLIENTS] = { 0 };
+config_t globalcfg;
 
 int main (void)
 {
-	ircclient_t c;
-
 	module_load ("./modules/core.so");
-	irc_init (&c, host, port);
+	config_load ("./config.lua", &globalcfg, clients);
+	irc_init (clients [0]);
 
 	return 0;
 }

@@ -25,6 +25,7 @@
 #include "net.h"
 #include "irc.h"
 #include "irchandler.h"
+#include "config.h"
 
 #define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
 #define connsleep(time) \
@@ -34,15 +35,13 @@
 	while (strlen (str) > 0 && isspace (str [strlen (str) - 1])) str [strlen (str) - 1] = '\0';
 
 // Initializes an ircclient_t, then starts its loop
-int irc_init (ircclient_t *cl, const char *host, const char *port)
+int irc_init (ircclient_t *cl)
 {
 	int conn_attempts = 0;
 	char buf [MAXBUF] = { 0 };
 
 	cl->s = -1;
 	cl->run = 1;
-	cl->host = host;
-	cl->port = port;
 
 	cl->rbuf = (char *) malloc (MAXBUF);
 
@@ -63,7 +62,7 @@ int irc_init (ircclient_t *cl, const char *host, const char *port)
 		}
 
 		// Login:
-		if (irc_login (cl, "ispolin") != 0)
+		if (irc_login (cl, cl->nick) != 0)
 		{
 			conn_attempts ++;
 			connsleep (1 << conn_attempts);
@@ -75,7 +74,9 @@ int irc_init (ircclient_t *cl, const char *host, const char *port)
 
 		while (irc_getln (cl, buf) >= 0)
 		{
-//			printf ("%s", buf);
+			#ifdef DEBUG
+			printf ("%s", buf);
+			#endif
 			irc_parse (cl, buf);
 			usleep (10000);
 		}
@@ -100,7 +101,7 @@ int irc_init (ircclient_t *cl, const char *host, const char *port)
 // Sends NICK and USER
 int irc_login (ircclient_t *cl, char *nick)
 {
-	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :ispolin", nick);
+	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :%s", globalcfg.username, globalcfg.realname);
 }
 
 // Sends JOIN (with optional password)
@@ -131,7 +132,7 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 
 	stripw (buf); // get rid of any extra newlines
 
-	ircprint ("[%s] <%s> %s", target, "ispolin", buf); // replace ispolin with bot nick when we get configs
+	ircprint ("[%s] <%s> %s", target, cl->nick, buf); // replace ispolin with bot nick when we get configs
 	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
 }
 

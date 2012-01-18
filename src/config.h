@@ -15,31 +15,18 @@
    along with Ispolin.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IRC_H__
-#define IRC_H__
-
-#define MAXCLIENTS 16
+#ifndef CONFIG_H__
+#define CONFIG_H__
 
 typedef struct
 {
-	int s; // Socket
-	char run;
-
-	char *host;
-	char *port;
-
-	char *rbuf; // Receive buffer, for irc_getln
-
 	char *nick;
-} ircclient_t;
+	char *username;
+	char *realname;
+} config_t;
 
-int irc_init (ircclient_t *cl);
-int irc_login (ircclient_t *cl, char *nick);
-int irc_join (ircclient_t *cl, char *chan, char *pw);
-int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
-int irc_quit (ircclient_t *cl, char *msg);
-void irc_parse (ircclient_t *cl, char *buf);
-int irc_getln (ircclient_t *cl, char *buf);
-int irc_sendln (ircclient_t *cl, char *fmt, ...);
+int load_config (char *filename, config_t *cfg, ircclient_t **clients);
 
-#endif // IRC_H__
+extern config_t globalcfg;
+
+#endif // CONFIG_H__
