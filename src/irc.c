@@ -35,10 +35,11 @@
 	while (strlen (str) > 0 && isspace (str [strlen (str) - 1])) str [strlen (str) - 1] = '\0';
 
 // Initializes an ircclient_t, then starts its loop
-int irc_init (ircclient_t *cl)
+void *irc_init (void *p)
 {
 	int conn_attempts = 0;
 	char buf [MAXBUF] = { 0 };
+	ircclient_t *cl = (ircclient_t*) p;
 
 	cl->s = -1;
 	cl->run = 1;
@@ -95,7 +96,7 @@ int irc_init (ircclient_t *cl)
 		eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
 	}
 
-	return cl->run; // return whether we quit on purpose or not
+	return;
 }
 
 // Sends NICK and USER

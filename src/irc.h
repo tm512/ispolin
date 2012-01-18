@@ -27,13 +27,12 @@ typedef struct
 
 	char *host;
 	char *port;
+	char *nick;
 
 	char *rbuf; // Receive buffer, for irc_getln
-
-	char *nick;
 } ircclient_t;
 
-int irc_init (ircclient_t *cl);
+void *irc_init (void *p);
 int irc_login (ircclient_t *cl, char *nick);
 int irc_join (ircclient_t *cl, char *chan, char *pw);
 int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);

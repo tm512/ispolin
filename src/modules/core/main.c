@@ -22,6 +22,8 @@
 #include "irc.h"
 #include "module.h"
 
+void die (void);
+
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
 	char *tokbuf = alloca (strlen (message));
@@ -49,7 +51,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 	if (strstr (message, ".quit") == message)
 	{
-		irc_quit (cl, "ispolin");
+		die ();
 		return;
 	}
 

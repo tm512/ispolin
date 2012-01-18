@@ -27,7 +27,7 @@ $(OBJDIR)/%.o: src/%.c $(HDR)
 	$(CC) -O$(OPT) -g$(DBG) $(CFLAGS) -c $< -o $@
 
 $(OUT): $(OBJ)
-	$(LD) -ldl -llua -rdynamic $(OBJ) -o $(OUT)
+	$(LD) -ldl -llua -lpthread -rdynamic $(OBJ) -o $(OUT)
 
 clean:
 	@rm -rf $(OBJDIR) $(OUT) $(MODSOUT)
