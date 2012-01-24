@@ -27,6 +27,8 @@
 #include "irchandler.h"
 #include "config.h"
 
+#undef DEBUG
+
 #define MAXBUF 512 // 512B of buffer for irc_getln / irc_sendln
 #define connsleep(time) \
 	iprint ("Sleeping for %i seconds before reconnecting.", time); \
@@ -39,7 +41,8 @@ void *irc_init (void *p)
 {
 	int conn_attempts = 0;
 	char buf [MAXBUF] = { 0 };
-	ircclient_t *cl = (ircclient_t*) p;
+	ircclient_t **clp = (ircclient_t**) p;
+	ircclient_t *cl = *clp;
 
 	cl->s = -1;
 	cl->run = 1;
@@ -95,6 +98,27 @@ void *irc_init (void *p)
 	{
 		eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
 	}
+
+	// Free the server's resources before returning
+	// Set the pointer to NULL so we give a free slot back
+	free (cl->host);
+	free (cl->port);
+	free (cl->nick);
+	free (cl->rbuf);
+
+	chanlist_t *it = cl->channels;
+	while (1)
+	{
+		chanlist_t *next = it->next;
+		free (it);
+		if (next)
+			it = next;
+		else
+			break;
+	}
+
+	free (cl);
+	*clp = NULL;
 
 	return;
 }

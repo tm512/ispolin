@@ -20,6 +20,13 @@
 
 #define MAXCLIENTS 16
 
+typedef struct chanlist_s
+{
+	char name [32];
+	char pass [32];
+	struct chanlist_s *next;
+} chanlist_t;
+
 typedef struct
 {
 	int s; // Socket
@@ -30,6 +37,7 @@ typedef struct
 	char *nick;
 
 	char *rbuf; // Receive buffer, for irc_getln
+	chanlist_t *channels;
 } ircclient_t;
 
 void *irc_init (void *p);

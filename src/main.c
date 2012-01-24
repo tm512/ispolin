@@ -23,7 +23,7 @@ int main (void)
 
 	for (i = 0; i < MAXCLIENTS; i++)
 		if (clients [i])
-			pthread_create (&threads [i], NULL, irc_init, (void*) clients [i]);
+			pthread_create (&threads [i], NULL, irc_init, (void*) &clients [i]);
 
 	for (i = 0; i < MAXCLIENTS; i++)
 		if (clients [i])

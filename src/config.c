@@ -76,6 +76,9 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 	// Load up the server tables
 	for (i = 1; i <= MAXCLIENTS; i++)
 	{
+		ircclient_t *cl;
+		int j;
+
 		lua_pushnumber (L, i);
 		lua_gettable (L, -2);
 
@@ -99,20 +102,77 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		}
 
 		clients [i - 1] = (ircclient_t*) malloc (sizeof (ircclient_t));
-		clients [i - 1]->host = (char*) malloc (strlen (lua_tostring (L, -3)));
-		clients [i - 1]->port = (char*) malloc (5); // port number only goes from 0 to 65535
-		clients [i - 1]->nick = (char*) malloc (lua_isstring (L, -1) ? strlen (lua_tostring (L, -1)) : strlen (cfg->nick));
+		cl = clients [i - 1];
+
+		cl->host = (char*) malloc (strlen (lua_tostring (L, -3)));
+		cl->port = (char*) malloc (5); // port number only goes from 0 to 65535
+		cl->nick = (char*) malloc (lua_isstring (L, -1) ? strlen (lua_tostring (L, -1)) : strlen (cfg->nick));
 
 		strcpy (clients [i - 1]->host, lua_tostring (L, -3));
 
 		if (lua_isnumber (L, -2))
-			sprintf (clients [i - 1]->port, "%i", (int) lua_tonumber (L, -2));
+			sprintf (cl->port, "%i", (int) lua_tonumber (L, -2));
 		else
-			sprintf (clients [i - 1]->port, "%i", 6667);
+			sprintf (cl->port, "%i", 6667);
 
-		strcpy (clients [i - 1]->nick, lua_isstring (L, -1) ? lua_tostring (L, -1) : cfg->nick);
+		strcpy (cl->nick, lua_isstring (L, -1) ? lua_tostring (L, -1) : cfg->nick);
 
-		lua_pop (L, 4);
+		lua_pop (L, 3);
+
+		// Load up channels
+		lua_pushstring (L, "channels");
+		lua_gettable (L, -2);
+
+		if (!lua_istable (L, -1))
+		{
+			lua_pop (L, 2);
+			eprint (0, "Channel array for %s wasn't found. Continuing without joining any channels", cl->host);
+			cl->channels = NULL;
+			continue;
+		}
+
+		cl->channels = (chanlist_t*) malloc (sizeof (chanlist_t));
+		chanlist_t *it = cl->channels;
+
+		j = 1;
+		while (1)
+		{
+			lua_pushnumber (L, j);
+			lua_gettable (L, -2);
+
+			if (lua_isstring (L, -1)) // no password
+			{
+				dprint ("adding %s", lua_tostring (L, -1));
+				strncpy ((char*) it->name, lua_tostring (L, -1), strlen (lua_tostring (L, -1)));
+				it->pass [0] = '\0';
+				lua_pop (L, 1);
+			}
+			else if (lua_istable (L, -1)) // Passworded
+			{
+				lua_pushnumber (L, 1);
+				lua_gettable (L, -2);
+				lua_pushnumber (L, 2);
+				lua_gettable (L, -3);
+
+				if (lua_isstring (L, -1) && lua_isstring (L, -2))
+				{
+					dprint ("adding %s with password %s", lua_tostring (L, -2), lua_tostring (L, -1));
+					strncpy ((char*) it->name, lua_tostring (L, -2), strlen (lua_tostring (L, -2)));
+					strncpy ((char*) it->pass, lua_tostring (L, -1), strlen (lua_tostring (L, -1)));
+				}
+
+				lua_pop (L, 3);
+			}
+			else if (lua_isnil (L, -1))
+				break;
+
+			it->next = (chanlist_t*) malloc (sizeof (chanlist_t));
+			it = it->next;
+			it->next = NULL;
+			j++;
+		}
+
+		lua_pop (L, 3);
 	}
 
 	lua_close (L);

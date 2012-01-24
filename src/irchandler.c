@@ -26,7 +26,12 @@
 
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
-	irc_join (cl, "#bottest", NULL);
+	chanlist_t *it;
+	for (it = cl->channels; it; it = it->next)
+		if (strlen (it->pass))
+			irc_join (cl, it->name, it->pass);
+		else
+			irc_join (cl, it->name, NULL);
 
 	return;
 }
