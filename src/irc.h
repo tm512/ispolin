@@ -19,11 +19,12 @@
 #define IRC_H__
 
 #define MAXCLIENTS 16
+#define MAXCHANLEN 32
 
 typedef struct chanlist_s
 {
-	char name [32];
-	char pass [32];
+	char name [MAXCHANLEN];
+	char pass [MAXCHANLEN];
 	struct chanlist_s *next;
 } chanlist_t;
 

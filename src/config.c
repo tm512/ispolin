@@ -64,8 +64,6 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 
 	lua_pop (L, 3);
 
-	dprint ("nick = %s, username = %s, realname = %s", cfg->nick, cfg->username, cfg->realname);
-
 	lua_getglobal (L, "servers");
 
 	if (!lua_istable (L, -1))
@@ -142,9 +140,7 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 
 			if (lua_isstring (L, -1)) // no password
 			{
-				dprint ("adding %s", lua_tostring (L, -1));
-				strncpy ((char*) it->name, lua_tostring (L, -1), strlen (lua_tostring (L, -1)));
-				it->pass [0] = '\0';
+				strncpy ((char*) it->name, lua_tostring (L, -1), MAXCHANLEN);
 				lua_pop (L, 1);
 			}
 			else if (lua_istable (L, -1)) // Passworded
@@ -156,9 +152,8 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 
 				if (lua_isstring (L, -1) && lua_isstring (L, -2))
 				{
-					dprint ("adding %s with password %s", lua_tostring (L, -2), lua_tostring (L, -1));
-					strncpy ((char*) it->name, lua_tostring (L, -2), strlen (lua_tostring (L, -2)));
-					strncpy ((char*) it->pass, lua_tostring (L, -1), strlen (lua_tostring (L, -1)));
+					strncpy ((char*) it->name, lua_tostring (L, -2), MAXCHANLEN);
+					strncpy ((char*) it->pass, lua_tostring (L, -1), MAXCHANLEN);
 				}
 
 				lua_pop (L, 3);
@@ -168,6 +163,8 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 
 			it->next = (chanlist_t*) malloc (sizeof (chanlist_t));
 			it = it->next;
+			it->name [0] = '\0';
+			it->pass [0] = '\0';
 			it->next = NULL;
 			j++;
 		}

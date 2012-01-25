@@ -157,7 +157,7 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 
 	stripw (buf); // get rid of any extra newlines
 
-	ircprint ("[%s] <%s> %s", target, cl->nick, buf); // replace ispolin with bot nick when we get configs
+	ircprint (cl, "[%s] <%s> %s", target, cl->nick, buf); // replace ispolin with bot nick when we get configs
 	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
 }
 
@@ -174,10 +174,7 @@ void irc_parse (ircclient_t *cl, char *buf)
 	if (buf [0] != ':') // PING
 	{
 		if (!strncmp (buf, "PING", 4))
-		{
-			dprint ("<< PONG");
 			irc_sendln (cl, "PONG %s", &buf [5]);
-		}
 
 		return;
 	}

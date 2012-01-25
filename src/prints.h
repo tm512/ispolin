@@ -42,7 +42,7 @@
 #define assert(E) \
 	if (!(E)) { eprint (1, "Assertion at %s:%i failed.", __FILE__, __LINE__) }
 
-#define ircprint(s, ...) \
-	fprintf (stdout, "[\033[1;34;40m=\033[0m] " s "\n", ##__VA_ARGS__)
+#define ircprint(c, s, ...) \
+	fprintf (stdout, "[\033[1;34;40m%s\033[0m] " s "\n", c->host, ##__VA_ARGS__)
 
 #endif // PRINTS_H__

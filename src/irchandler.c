@@ -24,13 +24,23 @@
 #include "irchandler.h"
 #include "module.h"
 
+void motd_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *message = strstr (args, ":") + 1;
+
+	if (message)
+		ircprint (cl, "\033[1m%s\033[0m", message);
+
+	return;
+}
+
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
 	chanlist_t *it;
 	for (it = cl->channels; it; it = it->next)
-		if (strlen (it->pass))
+		if (strlen (it->name) && strlen (it->pass))
 			irc_join (cl, it->name, it->pass);
-		else
+		else if (strlen (it->name))
 			irc_join (cl, it->name, NULL);
 
 	return;
@@ -45,7 +55,19 @@ void join_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	else
 		channel += 1; // need to remove the ":"
 
-	ircprint ("[%s] %s (%s) joins.", channel, nick, host);
+	ircprint (cl, "[%s] %s (%s) joins.", channel, nick, host);
+
+	return;
+}
+
+void kick_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *tokbuf = alloca (strlen (args));
+	char *channel = strtok_r (args, " ", &tokbuf);
+	char *victim = strtok_r (NULL, " ", &tokbuf);
+	char *reason = victim + + strlen (victim) + 2;
+
+	ircprint (cl, "[%s] %s was kicked by %s [%s]", channel, victim, nick, reason);
 
 	return;
 }
@@ -59,7 +81,7 @@ void notice_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	if (source [0] != '#') // not from a channel, switch source to nick
 		source = nick;
 
-	ircprint ("[%s] (%s) - \033[1m%s\033[0m", source, nick, message);
+	ircprint (cl, "[%s] (%s) - \033[1m%s\033[0m", source, nick, message);
 
 	return;
 }
@@ -70,7 +92,7 @@ void part_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	char *channel = strtok_r (args, " ", &tokbuf);
 	char *reason = channel + strlen (channel) + 2;
 
-	ircprint ("[%s] %s (%s) parts [%s].", channel, nick, host, reason);
+	ircprint (cl, "[%s] %s (%s) parts [%s].", channel, nick, host, reason);
 
 	return;
 }
@@ -84,7 +106,7 @@ void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	if (source [0] != '#') // not from a channel, switch source to nick
 		source = nick;
 
-	ircprint ("[%s] <%s> %s", source, nick, message);
+	ircprint (cl, "[%s] <%s> %s", source, nick, message);
 
 	listener_t *l;
 	for (l = &privmsgListeners; l; l = l->next)

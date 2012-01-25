@@ -60,7 +60,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 void init (listener_t *privmsg)
 {
-	privmsg->func = &corePrivmsg;
+	privmsg->func = corePrivmsg;
 	privmsg->next = NULL;
 
 	return;

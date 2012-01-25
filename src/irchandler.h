@@ -26,19 +26,23 @@ typedef struct
 	linehandler_f func;
 } irchandler_t;
 
+void motd_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void join_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void kick_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void notice_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void part_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args);
 
 static const irchandler_t irchandlers [] = 
 {
-	{ "376", &endmotd_handler },
-	{ "JOIN", &join_handler },
-	{ "NOTICE", &notice_handler },
-	{ "PART", &part_handler },
-	{ "PRIVMSG", &privmsg_handler }
+	{ "372", motd_handler },
+	{ "376", endmotd_handler },
+	{ "JOIN", join_handler },
+	{ "KICK", kick_handler },
+	{ "NOTICE", notice_handler },
+	{ "PART", part_handler },
+	{ "PRIVMSG", privmsg_handler }
 };
 
 #endif // IRCHANDLER_H__
