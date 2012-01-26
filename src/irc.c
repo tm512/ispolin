@@ -19,7 +19,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef linux
 #include <alloca.h>
+#endif // linux
 
 #include "prints.h"
 #include "net.h"

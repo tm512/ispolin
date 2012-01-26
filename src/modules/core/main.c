@@ -17,7 +17,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifdef linux
 #include <alloca.h>
+#else
+#include <stdlib.h>
+#endif
 #include <sys/utsname.h>
 
 #include "version.h"
