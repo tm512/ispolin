@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <alloca.h>
+#include <sys/utsname.h>
+
+#include "version.h"
 
 #include "irc.h"
 #include "config.h"
@@ -50,8 +53,11 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 	if (strstr (buf, "info") == buf)
 	{
-		// todo: expand, of course...
-		irc_privmsg (cl, source, "Hi, I'm an ispolin bot!");
+		struct utsname sysinfo;
+		uname (&sysinfo);
+
+		irc_privmsg (cl, source, "Hi, I am an ispolin bot version " ISP_VERSION GIT_VERSION " running on %s %s.",
+		             sysinfo.sysname, sysinfo.release);
 		return;
 	}
 

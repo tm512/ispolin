@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#include "version.h"
+
 #include "net.h"
 #include "irc.h"
 #include "module.h"
@@ -17,6 +19,9 @@ config_t globalcfg;
 int main (void)
 {
 	int i;
+
+	fprintf (stdout, "[\033[1m-\033[0m] \033[1mispolin\033[0m\n");
+	fprintf (stdout, "[\033[1m-\033[0m] \033[2mversion %s%s compiled on " __DATE__ "\033[0m\n", ISP_VERSION, GIT_VERSION);
 
 	module_load ("./modules/core.so");
 	config_load ("./config.lua", &globalcfg, clients);
