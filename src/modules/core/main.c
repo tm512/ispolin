@@ -20,22 +20,67 @@
 #include <alloca.h>
 
 #include "irc.h"
+#include "config.h"
 #include "module.h"
 
 void die (void);
 
+// TODO - Move this somewhere else (maybe a sort of API file?)
+char is_owner (char *host)
+{
+	if (strlen (host) != strlen (globalcfg.owner))
+		return 0;
+	else
+		return !strncmp (host, globalcfg.owner, strlen (host));
+}
+
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
 	char *tokbuf = alloca (strlen (message));
+	char *buf = alloca (strlen (message) + 1);
 
-	if (strstr (message, ".info") == message)
+	// check for prefix:
+	if (message [0] != globalcfg.prefix)
+		return;
+
+	// back up message:
+	strncpy (buf, message, strlen (message) + 1);
+
+	buf ++;
+
+	if (strstr (buf, "info") == buf)
 	{
 		// todo: expand, of course...
 		irc_privmsg (cl, source, "Hi, I'm an ispolin bot!");
 		return;
 	}
 
-	if (strstr (message, ".uptime") == message)
+	if ((strstr (buf, "join ") == buf || strstr (buf, "j ") == buf) && is_owner (host))
+	{
+		strtok_r (buf, " ", &tokbuf);
+		char *channel = strtok_r (NULL, " ", &tokbuf);
+		char *password = strtok_r (NULL, " ", &tokbuf);
+
+		irc_join (cl, channel, password);
+		return;
+	}
+
+	if ((strstr (buf, "part ") == buf || strstr (buf, "p ") == buf) && is_owner (host))
+	{
+		strtok_r (buf, " ", &tokbuf);
+		char *channel = strtok_r (NULL, " ", &tokbuf);
+
+		irc_part (cl, channel, "ispolin"); // todo: customizable
+		return;
+	}
+
+	if (strstr (buf, "quit") == buf && is_owner (host))
+	{
+		die ();
+		return;
+	}
+
+	if (strstr (buf, "uptime") == buf)
 	{
 		FILE *uptime_pipe = popen ("uptime", "r");
 		char *uptime_out = alloca (96);
@@ -46,12 +91,6 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 			irc_privmsg (cl, source, uptime_out);
 		}
 
-		return;
-	}
-
-	if (strstr (message, ".quit") == message)
-	{
-		die ();
 		return;
 	}
 

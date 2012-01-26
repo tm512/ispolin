@@ -138,6 +138,11 @@ int irc_join (ircclient_t *cl, char *chan, char *pw)
 		return irc_sendln (cl, "JOIN %s", chan);
 }
 
+int irc_part (ircclient_t *cl, char *chan, char *msg)
+{
+	return irc_sendln (cl, "PART %s :%s", chan, msg);
+}
+
 // Sends QUIT
 int irc_quit (ircclient_t *cl, char *msg)
 {

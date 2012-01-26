@@ -44,6 +44,7 @@ typedef struct
 void *irc_init (void *p);
 int irc_login (ircclient_t *cl, char *nick);
 int irc_join (ircclient_t *cl, char *chan, char *pw);
+int irc_part (ircclient_t *cl, char *chan, char *msg);
 int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
 int irc_quit (ircclient_t *cl, char *msg);
 void irc_parse (ircclient_t *cl, char *buf);

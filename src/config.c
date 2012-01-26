@@ -48,21 +48,27 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 	lua_getglobal (L, "nick");
 	lua_getglobal (L, "username");
 	lua_getglobal (L, "realname");
+	lua_getglobal (L, "prefix");
+	lua_getglobal (L, "owner");
 
-	if (!lua_isstring (L, -1) || !lua_isstring (L, -2) || !lua_isstring (L, -3))
+	if (!lua_isstring (L, -1) || !lua_isstring (L, -2) || !lua_isstring (L, -3) ||
+	    !lua_isstring (L, -4) || !lua_isstring (L, -5))
 	{
-		eprint (1, "Could not load defaults. Make sure that \"nick\", \"username\", and \"realname\" are set in %s.", filename);
+		eprint (1, "Could not load defaults. Make sure that \"nick\", \"username\", \"realname\", \"prefix\", and \"owner\" are set in %s.", filename);
 	}
 
-	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -3)));
-	cfg->username = (char*) malloc (strlen (lua_tostring (L, -2)));
-	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -1)));
+	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -5)));
+	cfg->username = (char*) malloc (strlen (lua_tostring (L, -4)));
+	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -3)));
+	cfg->prefix = lua_tostring (L, -2) [0];
+	cfg->owner = (char*) malloc (strlen (lua_tostring (L, -1)));
 
-	strcpy (cfg->nick, lua_tostring (L, -3));
-	strcpy (cfg->username, lua_tostring (L, -2));
-	strcpy (cfg->realname, lua_tostring (L, -1));
+	strcpy (cfg->nick, lua_tostring (L, -5));
+	strcpy (cfg->username, lua_tostring (L, -4));
+	strcpy (cfg->realname, lua_tostring (L, -3));
+	strcpy (cfg->owner, lua_tostring (L, -1));
 
-	lua_pop (L, 3);
+	lua_pop (L, 5);
 
 	lua_getglobal (L, "servers");
 

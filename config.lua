@@ -2,6 +2,9 @@ nick = "ispolin"
 username = "ispolin"
 realname = "ispolin"
 
+prefix = "."
+owner = "tm512@crimson.lostsig.net"
+
 servers = {
 	{
 		host = "crimson.lostsig.net",
