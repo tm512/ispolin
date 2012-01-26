@@ -15,6 +15,15 @@ MODSOUT = $(patsubst src/modules/%,modules/%.so,$(MODS))
 
 default: $(OUT) $(MODSOUT)
 
+# FreeBSD hack. point the compiler to include the proper headers
+# FreeBSD needs libdl to not be specified (builtin)
+ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "freebsd")),)
+CFLAGS="-I/usr/local/include/lua51"
+LDFLAGS=-L/usr/local/lib/lua51 -lm -llua -lpthread
+else
+LDFLAGS=-ldl -llua -lpthread
+endif
+
 src/version.h:
 	@echo "Generating version.h..."
 	@./version.sh
@@ -22,7 +31,7 @@ src/version.h:
 $(MODSOUT): $(wildcard $(patsubst src/modules/%,src/modules/%/,$(MODS))/*.[ch]) src/version.h
 	@mkdir -p modules
 	@cd $(patsubst modules/%.so,src/modules/%,$@); \
-	make CC=$(CC) LD=$(LD) OPT=$(OPT) DBG=$(DBG) BASEDIR=$(shell pwd) OUT=$(shell pwd)/$@ \
+	$(MAKE) CC=$(CC) LD=$(LD) OPT=$(OPT) DBG=$(DBG) BASEDIR=$(shell pwd) OUT=$(shell pwd)/$@ \
 	OBJDIR=$(shell pwd)/$(patsubst modules/%.so,$(MODOBJDIR)/%,$@) CFLAGS=$(CFLAGS)
 	@cd ../..
 
@@ -31,7 +40,7 @@ $(OBJDIR)/%.o: src/%.c $(HDR) src/version.h
 	$(CC) -O$(OPT) -g$(DBG) $(CFLAGS) -c $< -o $@
 
 $(OUT): $(OBJ)
-	$(LD) -ldl -llua -lpthread -rdynamic $(OBJ) -o $(OUT)
+	$(LD) $(LDFLAGS) -rdynamic $(OBJ) -o $(OUT)
 
 clean:
 	@rm -rf $(OBJDIR) $(OUT) $(MODSOUT) src/version.h

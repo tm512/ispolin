@@ -23,6 +23,9 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string.h>
+#ifndef linux
+#include <sys/select.h>
+#endif // linux
 
 #include "prints.h"
 #include "net.h"
