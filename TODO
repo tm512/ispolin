@@ -1,0 +1,18 @@
+incomplete ispolin roadmap
+(no particular order, I just want to do these at some point...)
+
+- Iron out compatibility between IRCds
+- More included modules
+  - Link title parser
+  - Markov text chains (maybe?)
+  - Games
+  - Quote database
+  - Last seen
+  - Log statistics parser (complicated?)
+- More handlers
+- Logging
+- Parse command line options
+- Less hacky loop for ircclient_t instances
+  (use select in irc_getln or something similar in order to wait for something to read, rather than failing)
+- Add Lua scripting API
+- General cleaning and refactoring (obviously!)
