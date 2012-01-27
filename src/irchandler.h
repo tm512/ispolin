@@ -26,23 +26,33 @@ typedef struct
 	linehandler_f func;
 } irchandler_t;
 
+void topic_get_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void topic_info_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void motd_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void join_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void kick_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void mode_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void notice_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void part_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void quit_handler (ircclient_t *cl, char *nick, char *host, char *args);
+void topic_set_handler (ircclient_t *cl, char *nick, char *host, char *args);
 
 static const irchandler_t irchandlers [] = 
 {
+	{ "332", topic_get_handler },
+	{ "333", topic_info_handler },
 	{ "372", motd_handler },
 	{ "376", endmotd_handler },
 	{ "JOIN", join_handler },
 	{ "KICK", kick_handler },
+	{ "MODE", mode_handler },
 	{ "NOTICE", notice_handler },
 	{ "PART", part_handler },
-	{ "PRIVMSG", privmsg_handler }
+	{ "PRIVMSG", privmsg_handler },
+	{ "QUIT", quit_handler },
+	{ "TOPIC", topic_set_handler }
 };
 
 #endif // IRCHANDLER_H__

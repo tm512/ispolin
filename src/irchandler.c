@@ -16,17 +16,46 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #ifdef linux
 #include <alloca.h>
-#else
-#include <stdlib.h>
 #endif // linux
 
 #include "prints.h"
 #include "irc.h"
 #include "irchandler.h"
 #include "module.h"
+
+void topic_get_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *tokbuf = alloca (strlen (args));
+	strtok_r (args, " ", &tokbuf); // get rid of our name first
+	char *channel = strtok_r (NULL, " ", &tokbuf);
+	char *topic = channel + strlen (channel) + 2;
+
+	ircprint (cl, "[%s] topic is: %s", channel, topic);
+
+	return;
+}
+
+void topic_info_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char timefmt [25];
+	char *tokbuf = alloca (strlen (args));
+	strtok_r (args, " ", &tokbuf); // get rid of our name first
+	char *channel = strtok_r (NULL, " ", &tokbuf);
+	char *setter = strtok_r (NULL, " ", &tokbuf);
+
+	// convert set time into time_t struct
+	time_t st = (time_t) atol (strtok_r (NULL, " ", &tokbuf));
+	strftime ((char*)timefmt, 25, "%a %b %d %T %Y", localtime (&st));
+
+	ircprint (cl, "[%s] topic set by %s on %s.", channel, setter, timefmt);
+
+	return;
+}
 
 void motd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
@@ -69,9 +98,20 @@ void kick_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	char *tokbuf = alloca (strlen (args));
 	char *channel = strtok_r (args, " ", &tokbuf);
 	char *victim = strtok_r (NULL, " ", &tokbuf);
-	char *reason = victim + + strlen (victim) + 2;
+	char *reason = victim + strlen (victim) + 2;
 
-	ircprint (cl, "[%s] %s was kicked by %s [%s]", channel, victim, nick, reason);
+	ircprint (cl, "[%s] %s was kicked by %s [%s].", channel, victim, nick, reason);
+
+	return;
+}
+
+void mode_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *tokbuf = alloca (strlen (args));
+	char *channel = strtok_r (args, " ", &tokbuf);
+	char *mode = channel + strlen (channel) + 1;
+
+	ircprint (cl, "[%s] %s sets mode [%s].", channel, nick, mode);
 
 	return;
 }
@@ -115,6 +155,26 @@ void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	listener_t *l;
 	for (l = &privmsgListeners; l; l = l->next)
 		((privmsglistener_f) l->func) (cl, nick, host, source, message);
+
+	return;
+}
+
+void quit_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *reason = strstr (args, ":") + 1;
+
+	ircprint (cl, "%s (%s) quits [%s].", nick, host, reason ? reason : "");
+
+	return;
+}
+
+void topic_set_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	char *tokbuf = alloca (strlen (args));
+	char *channel = strtok_r (args, " ", &tokbuf);
+	char *topic = channel + strlen (channel) + 2;
+
+	ircprint (cl, "[%s] %s sets topic to: %s", channel, nick, topic);
 
 	return;
 }
