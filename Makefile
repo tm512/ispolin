@@ -15,12 +15,18 @@ MODSOUT = $(patsubst src/modules/%,modules/%.so,$(MODS))
 
 default: $(OUT) $(MODSOUT)
 
-# FreeBSD hack. point the compiler to include the proper headers
-# FreeBSD needs libdl to not be specified (builtin)
+# System specific hacks!!! (*vomit*)
 ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "freebsd")),)
 CFLAGS="-I/usr/local/include/lua51"
 LDFLAGS=-L/usr/local/lib/lua51 -lm -llua -lpthread
-else
+endif
+
+ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "openbsd")),)
+CFLAGS="-I/usr/local/include"
+LDFLAGS=-L/usr/local/lib -lm -llua -lpthread -export-dynamic
+endif
+
+ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "linux")),)
 LDFLAGS=-ldl -llua -lpthread
 endif
 
