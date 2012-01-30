@@ -32,6 +32,8 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 	int i;
 	lua_State *L = lua_open ();
 
+	iprint ("Loading configuration file: %s", filename);
+
 	if (!L)
 	{
 		eprint (1, "Could not initialize Lua", filename);
