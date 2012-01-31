@@ -51,26 +51,23 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 	lua_getglobal (L, "username");
 	lua_getglobal (L, "realname");
 	lua_getglobal (L, "prefix");
-	lua_getglobal (L, "owner");
 
 	if (!lua_isstring (L, -1) || !lua_isstring (L, -2) || !lua_isstring (L, -3) ||
-	    !lua_isstring (L, -4) || !lua_isstring (L, -5))
+	    !lua_isstring (L, -4))
 	{
-		eprint (1, "Could not load defaults. Make sure that \"nick\", \"username\", \"realname\", \"prefix\", and \"owner\" are set in %s.", filename);
+		eprint (1, "Could not load defaults. Make sure that \"nick\", \"username\", \"realname\", and \"prefix\" are set in %s.", filename);
 	}
 
-	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -5)));
-	cfg->username = (char*) malloc (strlen (lua_tostring (L, -4)));
-	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -3)));
-	cfg->prefix = lua_tostring (L, -2) [0];
-	cfg->owner = (char*) malloc (strlen (lua_tostring (L, -1)));
+	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -4)));
+	cfg->username = (char*) malloc (strlen (lua_tostring (L, -3)));
+	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -2)));
+	cfg->prefix = lua_tostring (L, -1) [0];
 
-	strcpy (cfg->nick, lua_tostring (L, -5));
-	strcpy (cfg->username, lua_tostring (L, -4));
-	strcpy (cfg->realname, lua_tostring (L, -3));
-	strcpy (cfg->owner, lua_tostring (L, -1));
+	strcpy (cfg->nick, lua_tostring (L, -4));
+	strcpy (cfg->username, lua_tostring (L, -3));
+	strcpy (cfg->realname, lua_tostring (L, -2));
 
-	lua_pop (L, 5);
+	lua_pop (L, 4);
 
 	lua_getglobal (L, "servers");
 
@@ -100,30 +97,42 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		lua_gettable (L, -3);
 		lua_pushstring (L, "nick");
 		lua_gettable (L, -4);
+		lua_pushstring (L, "owner");
+		lua_gettable (L, -5);
 
-		if (!lua_isstring (L, -3))
+		if (!lua_isstring (L, -4))
 		{
-			lua_pop (L, 4);
+			eprint (0, "\"host\" for servers[%i] unset. Skipping.", i);
+			lua_pop (L, 5);
+			continue;
+		}
+
+		if (!lua_isstring (L, -1))
+		{
+			eprint (0, "\"owner\" not set for servers[%i]. Skipping.", i);
+			lua_pop (L, 5);
 			continue;
 		}
 
 		clients [i - 1] = (ircclient_t*) malloc (sizeof (ircclient_t));
 		cl = clients [i - 1];
 
-		cl->host = (char*) malloc (strlen (lua_tostring (L, -3)));
+		cl->host = (char*) malloc (strlen (lua_tostring (L, -4)));
 		cl->port = (char*) malloc (5); // port number only goes from 0 to 65535
-		cl->nick = (char*) malloc (lua_isstring (L, -1) ? strlen (lua_tostring (L, -1)) : strlen (cfg->nick));
+		cl->nick = (char*) malloc (lua_isstring (L, -2) ? strlen (lua_tostring (L, -2)) : strlen (cfg->nick));
+		cl->owner = (char*) malloc (strlen (lua_tostring (L, -1)));
 
-		strcpy (clients [i - 1]->host, lua_tostring (L, -3));
+		strcpy (clients [i - 1]->host, lua_tostring (L, -4));
 
-		if (lua_isnumber (L, -2))
-			sprintf (cl->port, "%i", (int) lua_tonumber (L, -2));
+		if (lua_isnumber (L, -3))
+			sprintf (cl->port, "%i", (int) lua_tonumber (L, -3));
 		else
 			sprintf (cl->port, "%i", 6667);
 
-		strcpy (cl->nick, lua_isstring (L, -1) ? lua_tostring (L, -1) : cfg->nick);
+		strcpy (cl->nick, lua_isstring (L, -2) ? lua_tostring (L, -2) : cfg->nick);
+		strcpy (cl->owner, lua_tostring (L, -1));
 
-		lua_pop (L, 3);
+		lua_pop (L, 4);
 
 		// Load up channels
 		lua_pushstring (L, "channels");

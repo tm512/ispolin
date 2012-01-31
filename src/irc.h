@@ -36,6 +36,7 @@ typedef struct
 	char *host;
 	char *port;
 	char *nick;
+	char *owner;
 
 	char *rbuf; // Receive buffer, for irc_getln
 	chanlist_t *channels;

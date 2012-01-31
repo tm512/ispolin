@@ -2,6 +2,7 @@ incomplete ispolin roadmap
 (no particular order, I just want to do these at some point...)
 
 - Iron out compatibility between IRCds
+- Clean up that awful mess of a config loader :/
 - More included modules
   - Link title parser
   - Markov text chains (maybe?)

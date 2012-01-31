@@ -25,7 +25,6 @@ typedef struct
 	char *realname;
 
 	char prefix;
-	char *owner;
 } config_t;
 
 int load_config (char *filename, config_t *cfg, ircclient_t **clients);
