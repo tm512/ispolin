@@ -165,7 +165,7 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 	stripw (buf); // get rid of any extra newlines
 
 	ircprint (cl, "[%s] <%s> %s", target, cl->nick, buf); // replace ispolin with bot nick when we get configs
-	return irc_sendln (cl, "PRIVMSG %s %s", target, buf);
+	return irc_sendln (cl, "PRIVMSG %s :%s", target, buf);
 }
 
 // Parses a line of text from IRC
