@@ -10,6 +10,6 @@ servers = {
 		owner = "tm512@crimson.lostsig.net",
 		channels = {
 			"#bottest"
-			}
+		}
 	}
 }

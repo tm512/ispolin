@@ -165,8 +165,33 @@ int irc_privmsg (ircclient_t *cl, char *target, char *message, ...)
 
 	stripw (buf); // get rid of any extra newlines
 
-	ircprint (cl, "[%s] <%s> %s", target, cl->nick, buf); // replace ispolin with bot nick when we get configs
+	ircprint (cl, "[%s] <%s> %s", target, cl->nick, buf);
 	return irc_sendln (cl, "PRIVMSG %s :%s", target, buf);
+}
+
+// Sends a NOTICE
+int irc_notice (ircclient_t *cl, char *target, char *message, ...)
+{
+	char buf [MAXBUF] = { 0 };
+	va_list va;
+
+	va_start (va, message);
+	vsnprintf (buf, MAXBUF, message, va);
+	va_end (va);
+
+	stripw (buf); // get rid of any extra newlines
+
+	ircprint (cl, "[%s] (%s) \033[1m%s\033[0m", target, cl->nick, buf);
+	return irc_sendln (cl, "NOTICE %s :%s", target, buf);
+}
+
+// Checks if the specified host is the same as the owner of this ircclient_t
+int irc_isowner (ircclient_t *cl, char *host)
+{
+	if (strlen (host) != strlen (cl->owner))
+		return 0;
+	else
+		return !strncmp (host, cl->owner, strlen (host));
 }
 
 // Parses a line of text from IRC

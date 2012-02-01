@@ -32,15 +32,6 @@
 
 void die (void);
 
-// TODO - Move this somewhere else (maybe a sort of API file?)
-char is_owner (ircclient_t *cl, char *host)
-{
-	if (strlen (host) != strlen (cl->owner))
-		return 0;
-	else
-		return !strncmp (host, cl->owner, strlen (host));
-}
-
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
 	char *tokbuf = alloca (strlen (message));
@@ -65,7 +56,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		return;
 	}
 
-	if ((strstr (buf, "join ") == buf || strstr (buf, "j ") == buf) && is_owner (cl, host))
+	if ((strstr (buf, "join ") == buf || strstr (buf, "j ") == buf) && irc_isowner (cl, host))
 	{
 		strtok_r (buf, " ", &tokbuf);
 		char *channel = strtok_r (NULL, " ", &tokbuf);
@@ -75,7 +66,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		return;
 	}
 
-	if ((strstr (buf, "part ") == buf || strstr (buf, "p ") == buf) && is_owner (cl, host))
+	if ((strstr (buf, "part ") == buf || strstr (buf, "p ") == buf) && irc_isowner (cl, host))
 	{
 		strtok_r (buf, " ", &tokbuf);
 		char *channel = strtok_r (NULL, " ", &tokbuf);
@@ -84,7 +75,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		return;
 	}
 
-	if (strstr (buf, "quit") == buf && is_owner (cl, host))
+	if (strstr (buf, "quit") == buf && irc_isowner (cl, host))
 	{
 		die ();
 		return;

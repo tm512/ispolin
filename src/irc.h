@@ -47,6 +47,8 @@ int irc_login (ircclient_t *cl, char *nick);
 int irc_join (ircclient_t *cl, char *chan, char *pw);
 int irc_part (ircclient_t *cl, char *chan, char *msg);
 int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
+int irc_notice (ircclient_t *cl, char *target, char *message, ...);
+int irc_isowner (ircclient_t *cl, char *host);
 int irc_quit (ircclient_t *cl, char *msg);
 void irc_parse (ircclient_t *cl, char *buf);
 int irc_getln (ircclient_t *cl, char *buf);
