@@ -23,9 +23,9 @@
 #include "irc.h"
 #include "module.h"
 
-typedef void (*modinit_f) (listener_t *privmsg); // TODO: More listeners, of course...
+typedef void (*modinit_f) (listener_t **privmsg); // TODO: More listeners, of course...
 
-listener_t privmsgListeners;
+listener_t *privmsgListeners = NULL;
 
 // Loads a module, passes all of our listener lists to the modules init function
 // Returns 0 on success
@@ -49,6 +49,33 @@ int module_load (char *path)
 	}
 
 	init (&privmsgListeners);
+//	dlclose (mod);
 
 	return 0;
+}
+
+void module_registerfunc (listener_t **lp, void *func, const char *modname)
+{
+	listener_t *l = *lp;
+
+	if (!l)
+	{
+		*lp = (listener_t*) malloc (sizeof (listener_t));
+		l = *lp;
+		l->func = func;
+		l->modname = modname;
+		l->next = NULL;
+	}
+	else
+	{
+		while (l->next)
+			l = l->next;
+
+		l->next = (listener_t*) malloc (sizeof (listener_t));
+		l->next->func = func;
+		l->next->modname = modname;
+		l->next->next = NULL;
+	}
+
+	return;
 }

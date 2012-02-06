@@ -18,17 +18,19 @@
 #ifndef PLUGIN_H__
 #define PLUGIN_H__
 
-int module_load (char *path);
-
 typedef void (*privmsglistener_f) (ircclient_t *cl, char *nick, char *host, char *source, char *message);
 
 typedef struct listener_s
 {
 	void *func;
+	const char *modname;
 	struct listener_s *next;
 } listener_t;
 
-extern listener_t privmsgListeners;
+int module_load (char *path);
+void module_registerfunc (listener_t **l, void *func, const char *modname);
+
+extern listener_t *privmsgListeners;
 /*
 extern listener_t joinListeners;
 extern listener_t partListeners;

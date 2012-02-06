@@ -153,7 +153,7 @@ void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	ircprint (cl, "[%s] <%s> %s", source, nick, message);
 
 	listener_t *l;
-	for (l = &privmsgListeners; l; l = l->next)
+	for (l = privmsgListeners; l; l = l->next)
 		((privmsglistener_f) l->func) (cl, nick, host, source, message);
 
 	return;

@@ -30,6 +30,8 @@
 #include "config.h"
 #include "module.h"
 
+const char modname [] = "core";
+
 void die (void);
 
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
@@ -98,10 +100,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
-void init (listener_t *privmsg)
+void init (listener_t **privmsg)
 {
-	privmsg->func = corePrivmsg;
-	privmsg->next = NULL;
-
+	module_registerfunc (privmsg, corePrivmsg, modname);
 	return;
 }

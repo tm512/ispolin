@@ -66,6 +66,7 @@ int main (int argc, char **argv)
 
 	config_load (configpath, &globalcfg, clients);
 	module_load ("./modules/core.so");
+	module_load ("./modules/linktitle.so");
 
 	for (i = 0; i < MAXCLIENTS; i++)
 		if (clients [i])
