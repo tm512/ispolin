@@ -58,14 +58,14 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		eprint (1, "Could not load defaults. Make sure that \"nick\", \"username\", \"realname\", and \"prefix\" are set in %s.", filename);
 	}
 
-	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -4)));
-	cfg->username = (char*) malloc (strlen (lua_tostring (L, -3)));
-	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -2)));
+	cfg->nick = (char*) malloc (strlen (lua_tostring (L, -4)) + 1);
+	cfg->username = (char*) malloc (strlen (lua_tostring (L, -3)) + 1);
+	cfg->realname = (char*) malloc (strlen (lua_tostring (L, -2)) + 1);
 	cfg->prefix = lua_tostring (L, -1) [0];
 
-	strcpy (cfg->nick, lua_tostring (L, -4));
-	strcpy (cfg->username, lua_tostring (L, -3));
-	strcpy (cfg->realname, lua_tostring (L, -2));
+	strncpy (cfg->nick, lua_tostring (L, -4), strlen (lua_tostring (L, -4)) + 1);
+	strncpy (cfg->username, lua_tostring (L, -3), strlen (lua_tostring (L, -3)) + 1);
+	strncpy (cfg->realname, lua_tostring (L, -2), strlen (lua_tostring (L, -2)) + 1);
 
 	lua_pop (L, 4);
 
@@ -117,9 +117,9 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		clients [i - 1] = (ircclient_t*) malloc (sizeof (ircclient_t));
 		cl = clients [i - 1];
 
-		cl->host = (char*) malloc (strlen (lua_tostring (L, -4)));
-		cl->port = (char*) malloc (5); // port number only goes from 0 to 65535
-		cl->nick = (char*) malloc (lua_isstring (L, -2) ? strlen (lua_tostring (L, -2)) : strlen (cfg->nick));
+		cl->host = (char*) malloc (strlen (lua_tostring (L, -4)) + 1);
+		cl->port = (char*) malloc (6); // port number only goes from 0 to 65535
+		cl->nick = (char*) malloc (lua_isstring (L, -2) ? strlen (lua_tostring (L, -2)) + 1 : strlen (cfg->nick) + 1);
 		cl->owner = (char*) malloc (strlen (lua_tostring (L, -1)));
 
 		strcpy (clients [i - 1]->host, lua_tostring (L, -4));
@@ -129,8 +129,9 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		else
 			sprintf (cl->port, "%i", 6667);
 
-		strcpy (cl->nick, lua_isstring (L, -2) ? lua_tostring (L, -2) : cfg->nick);
-		strcpy (cl->owner, lua_tostring (L, -1));
+		strncpy (cl->nick, lua_isstring (L, -2) ? lua_tostring (L, -2) : cfg->nick,
+		         lua_isstring (L, -2) ? strlen (lua_tostring (L, -2)) + 1 : strlen (cfg->nick) + 1);
+		strncpy (cl->owner, lua_tostring (L, -1), strlen (lua_tostring (L, -1)) + 1);
 
 		lua_pop (L, 4);
 
