@@ -11,4 +11,4 @@ $(OBJDIR)/%.o: %.c $(HDR)
 	$(CC) -fPIC -I$(BASEDIR)/src -O$(OPT) -g$(DBG) $(CFLAGS) -c $< -o $@
 
 $(OUT): $(OBJ)
-	$(LD) -shared -lcurl $(OBJ) -o $(OUT)
+	$(LD) $(LDFLAGS) -shared -lcurl $(OBJ) -o $(OUT)

@@ -17,12 +17,12 @@ default: $(OUT) $(MODSOUT)
 
 # System specific hacks!!! (*vomit*)
 ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "freebsd")),)
-CFLAGS="-I/usr/local/include/lua51"
-LDFLAGS=-L/usr/local/lib/lua51 -lm -llua -lpthread
+CFLAGS=-I/usr/local/include/ -I/usr/local/include/lua51
+LDFLAGS=-L/usr/local/lib/ -L/usr/local/lib/lua51 -lm -llua -lpthread
 endif
 
 ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "openbsd")),)
-CFLAGS="-I/usr/local/include"
+CFLAGS=-I/usr/local/include
 LDFLAGS=-L/usr/local/lib -lm -llua -lpthread -export-dynamic
 endif
 
@@ -38,7 +38,7 @@ $(MODSOUT): $(wildcard $(patsubst src/modules/%,src/modules/%/,$(MODS))/*.[ch]) 
 	@mkdir -p modules
 	@cd $(patsubst modules/%.so,src/modules/%,$@); \
 	$(MAKE) CC=$(CC) LD=$(LD) OPT=$(OPT) DBG=$(DBG) BASEDIR=$(shell pwd) OUT=$(shell pwd)/$@ \
-	OBJDIR=$(shell pwd)/$(patsubst modules/%.so,$(MODOBJDIR)/%,$@) CFLAGS=$(CFLAGS)
+	OBJDIR=$(shell pwd)/$(patsubst modules/%.so,$(MODOBJDIR)/%,$@) CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 	@cd ../..
 
 $(OBJDIR)/%.o: src/%.c $(HDR) src/version.h
