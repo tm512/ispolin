@@ -2,3 +2,4 @@ ispolin
 /obj/
 /modules/
 /src/version.h
+/*.pid

@@ -32,7 +32,7 @@
 
 const char modname [] = "core";
 
-void die (void);
+void die (char *msg);
 
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
@@ -79,7 +79,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 	if (strstr (buf, "quit") == buf && irc_isowner (cl, host))
 	{
-		die ();
+		die ("ispolin");
 		return;
 	}
 
