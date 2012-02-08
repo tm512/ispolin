@@ -23,7 +23,7 @@
 #include "irc.h"
 #include "module.h"
 
-typedef void (*modinit_f) (listener_t **privmsg); // TODO: More listeners, of course...
+typedef void (*modinit_f) (void *mod, listener_t **privmsg); // TODO: More listeners, of course...
 
 listener_t *privmsgListeners = NULL;
 
@@ -33,6 +33,8 @@ int module_load (char *path)
 {
 	modinit_f init;
 	void *mod = dlopen (path, RTLD_LAZY);
+
+	iprint ("Loading module: %s", path);
 
 	if (!mod)
 	{
@@ -48,13 +50,12 @@ int module_load (char *path)
 		return 2;
 	}
 
-	init (&privmsgListeners);
-//	dlclose (mod);
+	init (mod, &privmsgListeners);
 
 	return 0;
 }
 
-void module_registerfunc (listener_t **lp, void *func, const char *modname)
+void module_registerfunc (listener_t **lp, void *func, void *mod, const char *modname)
 {
 	listener_t *l = *lp;
 
@@ -64,6 +65,7 @@ void module_registerfunc (listener_t **lp, void *func, const char *modname)
 		l = *lp;
 		l->func = func;
 		l->modname = modname;
+		l->mod = mod;
 		l->next = NULL;
 	}
 	else
@@ -74,6 +76,7 @@ void module_registerfunc (listener_t **lp, void *func, const char *modname)
 		l->next = (listener_t*) malloc (sizeof (listener_t));
 		l->next->func = func;
 		l->next->modname = modname;
+		l->next->mod = mod;
 		l->next->next = NULL;
 	}
 

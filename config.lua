@@ -13,3 +13,5 @@ servers = {
 		}
 	}
 }
+
+modules = { "linktitle.so" }

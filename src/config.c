@@ -190,6 +190,49 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 		lua_pop (L, 3);
 	}
 
+	// Load modules
+	lua_getglobal (L, "modpath");
+
+	if (lua_isstring (L, -1))
+	{
+		cfg->modpath = (char*) malloc (strlen (lua_tostring (L, -1)) + 1);
+		strncpy (cfg->modpath, lua_tostring (L, -1), strlen (lua_tostring (L, -1)) + 1);
+	}
+	else
+		cfg->modpath = "./modules/";
+
+	lua_pop (L, 1);
+	lua_getglobal (L, "modules");
+
+	if (!lua_istable (L, -1))
+	{
+		eprint (0, "Module list not found.");
+		lua_close (L);
+		return 0;
+	}
+
+	i = 1;
+	while (1)
+	{
+		lua_pushnumber (L, i);
+		lua_gettable (L, -2);
+
+		if (lua_isstring (L, -1))
+		{
+			cfg->modlist [i - 1] = (char*) malloc (strlen (cfg->modpath) + strlen (lua_tostring (L, -1)) + 1);
+			sprintf (cfg->modlist [i - 1], "%s%s", cfg->modpath, lua_tostring (L, -1));
+		}
+		else
+			cfg->modlist [i - 1] = NULL;
+
+		lua_pop (L, 1);
+
+		if (i++ < MAXMODULES)
+			continue;
+		else
+			break;
+	}
+
 	lua_close (L);
 
 	return 0;

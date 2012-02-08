@@ -170,9 +170,9 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 	return;
 }
 
-void init (listener_t **privmsg)
+void init (void *mod, listener_t **privmsg)
 {
 	curl_global_init (CURL_GLOBAL_ALL);
-	module_registerfunc (privmsg, linktitle, modname);
+	module_registerfunc (privmsg, linktitle, mod, modname);
 	return;
 }

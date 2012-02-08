@@ -18,6 +18,8 @@
 #ifndef CONFIG_H__
 #define CONFIG_H__
 
+#define MAXMODULES 64
+
 typedef struct
 {
 	char *nick;
@@ -25,6 +27,9 @@ typedef struct
 	char *realname;
 
 	char prefix;
+
+	char *modpath;
+	char *modlist [MAXMODULES];
 } config_t;
 
 int load_config (char *filename, config_t *cfg, ircclient_t **clients);

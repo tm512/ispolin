@@ -58,6 +58,7 @@ void parseargs (int argc, char **argv)
 int main (int argc, char **argv)
 {
 	int i;
+	char *coremodule;
 
 	fprintf (stdout, "[\033[1m-\033[0m] \033[1mispolin\033[0m\n");
 	fprintf (stdout, "[\033[1m-\033[0m] \033[2mversion %s%s compiled on " __DATE__ "\033[0m\n", ISP_VERSION, GIT_VERSION);
@@ -65,8 +66,15 @@ int main (int argc, char **argv)
 	parseargs (argc, argv);
 
 	config_load (configpath, &globalcfg, clients);
-	module_load ("./modules/core.so");
-	module_load ("./modules/linktitle.so");
+
+	coremodule = (char*) malloc (strlen (globalcfg.modpath) + 8);
+	sprintf (coremodule, "%score.so", globalcfg.modpath);
+	module_load (coremodule);
+	free (coremodule);
+
+	for (i = 0; i < MAXMODULES; i++)
+		if (globalcfg.modlist [i])
+			module_load (globalcfg.modlist [i]);
 
 	for (i = 0; i < MAXCLIENTS; i++)
 		if (clients [i])

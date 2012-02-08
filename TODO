@@ -4,7 +4,6 @@ incomplete ispolin roadmap
 - Iron out compatibility between IRCds
 - Clean up that awful mess of a config loader :/
 - More included modules
-  - Link title parser
   - Markov text chains (maybe?)
   - Games
   - Quote database

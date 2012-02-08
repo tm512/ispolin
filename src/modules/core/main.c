@@ -100,8 +100,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
-void init (listener_t **privmsg)
+void init (void *mod, listener_t **privmsg)
 {
-	module_registerfunc (privmsg, corePrivmsg, modname);
+	module_registerfunc (privmsg, corePrivmsg, mod, modname);
 	return;
 }

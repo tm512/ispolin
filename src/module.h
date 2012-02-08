@@ -24,11 +24,12 @@ typedef struct listener_s
 {
 	void *func;
 	const char *modname;
+	void *mod;
 	struct listener_s *next;
 } listener_t;
 
 int module_load (char *path);
-void module_registerfunc (listener_t **l, void *func, const char *modname);
+void module_registerfunc (listener_t **l, void *func, void *mod, const char *modname);
 
 extern listener_t *privmsgListeners;
 /*
