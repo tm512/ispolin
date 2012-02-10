@@ -110,7 +110,8 @@ void get_title (char **link, char **ttag)
 
 	// Now, we need to strip apart the link
 	*link = strstr (*link, "://") + 3;
-	strstr (*link, "/") [0] = '\0';
+	if (strstr (*link, "/"))
+		strstr (*link, "/") [0] = '\0';
 
 	return;
 }
