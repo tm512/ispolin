@@ -86,7 +86,7 @@ void condense_spaces (char *c)
 void get_title (char **link, char **ttag)
 {
 	int i;
-	char *ctag = strstr (*ttag, "</title>");
+	char *ctag = strcasestr (*ttag, "</title>");
 
 	if (!ctag)
 		return;
@@ -157,7 +157,7 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 		curl_easy_cleanup (c);
 
 		// Finally extract the title from the body, if possible
-		ttag = strstr (body.data, "<title>");
+		ttag = strcasestr (body.data, "<title>");
 		get_title (&link, &ttag);
 
 		irc_privmsg (cl, source, "link title: %s (at %s)", ttag, link);
