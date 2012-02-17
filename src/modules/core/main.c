@@ -35,17 +35,30 @@ const char modname [] = "core";
 
 void die (char *msg);
 
+void ctcpHandler (ircclient_t *cl, char *nick, char *host, char *source, char *message)
+{
+	message ++;
+
+	if (strstr (message, "VERSION") == message && strstr (nick, source))
+		irc_notice (cl, source, "\001VERSION ispolin " ISP_VERSION GIT_VERSION " compiled " __DATE__ "\001");
+
+	return;
+}
+
 void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
 	char *tokbuf = alloca (strlen (message));
 	char *buf = alloca (strlen (message) + 1);
 
 	// check for prefix:
-	if (message [0] != globalcfg.prefix)
+	if (message [0] != globalcfg.prefix && message [0] != '\001')
 		return;
 
 	// back up message:
 	strncpy (buf, message, strlen (message) + 1);
+
+	if (buf [0] == '\001')
+		ctcpHandler (cl, nick, host, source, buf);
 
 	buf ++;
 
