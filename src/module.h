@@ -29,6 +29,7 @@ typedef struct listener_s
 } listener_t;
 
 int module_load (char *path);
+int module_unload (char *name, listener_t **lp);
 void module_registerfunc (listener_t **l, void *func, void *mod, const char *modname);
 
 extern listener_t *privmsgListeners;

@@ -26,6 +26,7 @@
 
 #include "version.h"
 
+#include "prints.h"
 #include "irc.h"
 #include "config.h"
 #include "module.h"
@@ -68,6 +69,40 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		return;
 	}
 
+	if ((strstr (buf, "module ") == buf || strstr (buf, "mod ") == buf) && irc_isowner (cl, host))
+	{
+		strtok_r (buf, " ", &tokbuf);
+		char *modcmd = strtok_r (NULL, " ", &tokbuf);
+		char *modname = modcmd + strlen (modcmd) + 1;;
+
+		dprint ("%s %s", modcmd, modname);
+
+		if (!strlen (modname))
+		{
+			irc_notice (cl, nick, "No module name specified!");
+			return;
+		}
+
+		if (strstr (modcmd, "load") == modcmd)
+		{
+			char filepath [strlen (globalcfg.modpath) + strlen (modname) + 4];
+			sprintf (filepath, "%s/%s.so", globalcfg.modpath, modname);
+			if (!module_load (filepath))
+				irc_notice (cl, nick, "Loaded module: %s", filepath);
+			else
+				irc_notice (cl, nick, "Failed to load module: %s", filepath);
+		}
+		else if (strstr (modcmd, "unload") == modcmd)
+		{
+			if (!module_unload (modname, &privmsgListeners))
+				irc_notice (cl, nick, "Unloaded module: %s", modname);
+			else
+				irc_notice (cl, nick, "Failed to unload module: %s", modname);
+		}
+
+		return;
+	}
+
 	if ((strstr (buf, "part ") == buf || strstr (buf, "p ") == buf) && irc_isowner (cl, host))
 	{
 		strtok_r (buf, " ", &tokbuf);
@@ -100,8 +135,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
-void init (void *mod, listener_t **privmsg)
+void init (void *mod)
 {
-	module_registerfunc (privmsg, corePrivmsg, mod, modname);
+	module_registerfunc (&privmsgListeners, corePrivmsg, mod, modname);
 	return;
 }

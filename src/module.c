@@ -17,13 +17,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <dlfcn.h>
 
 #include "prints.h"
 #include "irc.h"
 #include "module.h"
 
-typedef void (*modinit_f) (void *mod, listener_t **privmsg); // TODO: More listeners, of course...
+typedef void (*modinit_f) (void *mod);
 
 listener_t *privmsgListeners = NULL;
 
@@ -50,10 +51,62 @@ int module_load (char *path)
 		return 2;
 	}
 
-	init (mod, &privmsgListeners);
+	init (mod);
 
 	return 0;
 }
+
+#define MAX(a,b) ((a < b) ? b : a)
+
+int module_unload (char *name, listener_t **lp)
+{
+	listener_t *it = *lp;
+	void *mod = NULL;
+
+	if (!strncmp ("core", name, MAX (4, strlen (it->modname))))
+		return 1; // Do not unload the core module
+
+	if (!strncmp (name, it->modname, MAX (strlen (name), strlen (it->modname))))
+	{
+		(*lp) = it->next;
+		mod = it->mod;
+		free (it);
+	}
+
+	while (1)
+	{
+		if (!it->next)
+			break;
+
+		if (!strncmp (name, it->next->modname, MAX (strlen (name), strlen (it->next->modname))))
+		{
+			listener_t *next = it->next->next;
+
+			if (mod && mod != it->next->mod) // Huh?
+				dlclose (mod);
+
+			mod = it->next->mod;
+
+			free (it->next);
+			it->next = next;
+		}
+	}
+
+	if (mod)
+	{
+		iprint ("Unloaded module: %s", name);
+		dlclose (mod);
+	}
+	else
+	{
+		eprint (0, "Module %s doesn't appear to be loaded", name);
+		return 2;
+	}
+
+	return 0;
+}
+
+#undef MAX
 
 void module_registerfunc (listener_t **lp, void *func, void *mod, const char *modname)
 {
