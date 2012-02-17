@@ -18,6 +18,8 @@
 // The following source file is a good reason why manipulating 
 // strings in C is a horrible idea.
 
+#define _GNU_SOURCE // :S
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -158,9 +160,12 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 
 		// Finally extract the title from the body, if possible
 		ttag = strcasestr (body.data, "<title>");
-		get_title (&link, &ttag);
 
-		irc_privmsg (cl, source, "link title: %s (at %s)", ttag, link);
+		if (ttag)
+		{
+			get_title (&link, &ttag);
+			irc_privmsg (cl, source, "link title: %s (at %s)", ttag, link);
+		}
 
 		free (head.data);
 		free (body.data);
@@ -171,9 +176,9 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 	return;
 }
 
-void init (void *mod, listener_t **privmsg)
+void init (void *mod)
 {
 	curl_global_init (CURL_GLOBAL_ALL);
-	module_registerfunc (privmsg, linktitle, mod, modname);
+	module_registerfunc (&privmsgListeners, linktitle, mod, modname);
 	return;
 }
