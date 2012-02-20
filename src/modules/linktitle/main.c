@@ -123,6 +123,9 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 	char *buf, *link, *ttag;
 	CURL *c;
 
+	if (source [0] != '#')
+		return; // Do not reply to links through private message
+
 	buf = alloca (strlen (message) + 1);
 	strncpy (buf, message, strlen (message) + 1); // We don't want to mess up the original
 
