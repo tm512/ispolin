@@ -100,6 +100,15 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		{
 			char filepath [strlen (globalcfg.modpath) + strlen (modname) + 4];
 			sprintf (filepath, "%s/%s.so", globalcfg.modpath, modname);
+
+			listener_t *it;
+			for (it = privmsgListeners; it; it = it->next)
+				if (strstr (it->modname, modname))
+				{
+					irc_notice (cl, nick, "Module already loaded!");
+					return;
+				}
+
 			if (!module_load (filepath))
 				irc_notice (cl, nick, "Loaded module: %s", filepath);
 			else
