@@ -30,9 +30,6 @@
 #include "module.h"
 #include "config.h"
 
-FILE *p_out;
-FILE *p_err;
-
 ircclient_t *clients [MAXCLIENTS] = { 0 };
 pthread_t threads [MAXCLIENTS];
 char *configpath = "./config.lua";
@@ -67,8 +64,9 @@ void parseargs (int argc, char **argv)
 
 			if (!(pid = fork ()))
 			{
-				p_out = fopen ("/dev/null", "a");
-				p_err = fopen ("/dev/null", "a");
+				close (0);
+				close (1);
+				close (2);
 			}
 			else
 			{
@@ -109,9 +107,6 @@ int main (int argc, char **argv)
 
 	fprintf (stdout, "[\033[1m-\033[0m] \033[1mispolin\033[0m\n");
 	fprintf (stdout, "[\033[1m-\033[0m] \033[2mversion %s%s compiled on " __DATE__ "\033[0m\n", ISP_VERSION, GIT_VERSION);
-
-	p_out = stdout;
-	p_err = stderr;
 
 	parseargs (argc, argv);
 
