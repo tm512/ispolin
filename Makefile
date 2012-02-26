@@ -21,7 +21,7 @@ CFLAGS=-I/usr/local/include/ -I/usr/local/include/lua51
 LDFLAGS=-L/usr/local/lib/ -L/usr/local/lib/lua51 -lm -llua -lpthread
 endif
 
-ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "netbsd")),)
+ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -Ei "netbsd|dragonfly")),)
 CFLAGS=-I/usr/pkg/include
 LDFLAGS=-L/usr/pkg/lib/ -lm -llua -lpthread
 endif
