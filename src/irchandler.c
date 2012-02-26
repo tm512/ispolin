@@ -90,6 +90,10 @@ void join_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 	ircprint (cl, "[%s] %s (%s) joins.", channel, nick, host);
 
+	listener_t *l;
+	for (l = joinListeners; l; l = l->next)
+		((joinlistener_f) l->func) (cl, nick, host, channel);
+
 	return;
 }
 
@@ -138,6 +142,10 @@ void part_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 	ircprint (cl, "[%s] %s (%s) parts [%s].", channel, nick, host, reason);
 
+	listener_t *l;
+	for (l = partListeners; l; l = l->next)
+		((partlistener_f) l->func) (cl, nick, host, channel, reason);
+
 	return;
 }
 
@@ -164,6 +172,10 @@ void quit_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	char *reason = strstr (args, ":") + 1;
 
 	ircprint (cl, "%s (%s) quits [%s].", nick, host, reason ? reason : "");
+
+	listener_t *l;
+	for (l = quitListeners; l; l = l->next)
+		((quitlistener_f) l->func) (cl, nick, host, reason);
 
 	return;
 }

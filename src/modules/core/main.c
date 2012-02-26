@@ -31,6 +31,17 @@
 #include "config.h"
 #include "module.h"
 
+#define modcheck(lst) \
+{ \
+	listener_t *it; \
+	for (it = lst; it; it = it->next) \
+		if (strstr (it->modname, modname) == it->modname) \
+		{ \
+			irc_notice (cl, nick, "Module already loaded!"); \
+			return; \
+		} \
+}
+
 const char modname [] = "core";
 
 void die (char *msg);
@@ -101,13 +112,10 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 			char filepath [strlen (globalcfg.modpath) + strlen (modname) + 4];
 			sprintf (filepath, "%s/%s.so", globalcfg.modpath, modname);
 
-			listener_t *it;
-			for (it = privmsgListeners; it; it = it->next)
-				if (strstr (it->modname, modname))
-				{
-					irc_notice (cl, nick, "Module already loaded!");
-					return;
-				}
+			modcheck (privmsgListeners);
+			modcheck (joinListeners);
+			modcheck (partListeners);
+			modcheck (quitListeners);
 
 			if (!module_load (filepath))
 				irc_notice (cl, nick, "Loaded module: %s", filepath);
