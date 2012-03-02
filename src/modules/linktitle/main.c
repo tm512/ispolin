@@ -149,6 +149,7 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 		curl_easy_setopt (c, CURLOPT_WRITEHEADER, (void*) &head);
 		curl_easy_setopt (c, CURLOPT_WRITEDATA, (void*) &body);
 		curl_easy_setopt (c, CURLOPT_NOBODY, 1);
+		curl_easy_setopt (c, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_perform (c);
 
 		if (!strstr (head.data, "Content-Type: text/html"))
@@ -156,7 +157,6 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 
 		// Get the body of the http request
 		curl_easy_setopt (c, CURLOPT_HTTPGET, 1);
-		curl_easy_setopt (c, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt (c, CURLOPT_WRITEHEADER, NULL);
 		curl_easy_perform (c);
 		curl_easy_cleanup (c);
