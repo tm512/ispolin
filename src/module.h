@@ -18,9 +18,10 @@
 #ifndef PLUGIN_H__
 #define PLUGIN_H__
 
-typedef void (*privmsglistener_f) (ircclient_t *cl, char *nick, char *host, char *source, char *message);
 typedef void (*joinlistener_f) (ircclient_t *cl, char *nick, char *host, char *channel);
+typedef void (*nicklistener_f) (ircclient_t *cl, char *nick, char *host, char *newnick);
 typedef void (*partlistener_f) (ircclient_t *cl, char *nick, char *host, char *channel, char *reason);
+typedef void (*privmsglistener_f) (ircclient_t *cl, char *nick, char *host, char *source, char *message);
 typedef void (*quitlistener_f) (ircclient_t *cl, char *nick, char *host, char *reason);
 
 typedef struct listener_s
@@ -35,9 +36,10 @@ int module_load (char *path);
 int module_unload (char *name, listener_t **lp);
 void module_registerfunc (listener_t **l, void *func, void *mod, const char *modname);
 
-extern listener_t *privmsgListeners;
 extern listener_t *joinListeners;
+extern listener_t *nickListeners;
 extern listener_t *partListeners;
+extern listener_t *privmsgListeners;
 extern listener_t *quitListeners;
 
 #endif // PLUGIN_H__

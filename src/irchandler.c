@@ -120,6 +120,17 @@ void mode_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	return;
 }
 
+void nick_handler (ircclient_t *cl, char *nick, char *host, char *args)
+{
+	ircprint (cl, "%s (%s) is now known as %s.", nick, host, args);
+
+	listener_t *l;
+	for (l = nickListeners; l; l = l->next)
+		((nicklistener_f) l->func) (cl, nick, host, args);
+
+	return;
+}
+
 void notice_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
 	char *tokbuf = alloca (strlen (args));

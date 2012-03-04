@@ -26,9 +26,10 @@
 
 typedef void (*modinit_f) (void *mod);
 
-listener_t *privmsgListeners = NULL;
 listener_t *joinListeners = NULL;
+listener_t *nickListeners = NULL;
 listener_t *partListeners = NULL;
+listener_t *privmsgListeners = NULL;
 listener_t *quitListeners = NULL;
 
 // Loads a module, passes all of our listener lists to the modules init function
