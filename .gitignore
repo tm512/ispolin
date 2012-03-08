@@ -3,3 +3,4 @@ ispolin
 /modules/
 /src/version.h
 /*.pid
+/seen.db

@@ -14,4 +14,4 @@ servers = {
 	}
 }
 
-modules = { "linktitle.so" }
+modules = { "linktitle.so", "seen.so" }
