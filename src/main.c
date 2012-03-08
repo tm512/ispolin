@@ -64,9 +64,8 @@ void parseargs (int argc, char **argv)
 
 			if (!(pid = fork ()))
 			{
-				close (0);
-				close (1);
-				close (2);
+				freopen ("/dev/null", "w", stdout);
+				freopen ("/dev/null", "w", stderr);
 			}
 			else
 			{
