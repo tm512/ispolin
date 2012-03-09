@@ -153,7 +153,11 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 		curl_easy_perform (c);
 
 		if (!strstr (head.data, "Content-Type: text/html"))
+		{
+			free (head.data);
+			free (body.data);
 			return; // According to the web server, this is not an HTML file
+		}
 
 		// Get the body of the http request
 		curl_easy_setopt (c, CURLOPT_HTTPGET, 1);
