@@ -70,6 +70,10 @@ void motd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
 	chanlist_t *it;
+
+	if (cl->ns_nick && cl->ns_command)
+		irc_privmsg (cl, cl->ns_nick, "%s", cl->ns_command);
+
 	for (it = cl->channels; it; it = it->next)
 		if (strlen (it->name) && strlen (it->pass))
 			irc_join (cl, it->name, it->pass);

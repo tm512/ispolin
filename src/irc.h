@@ -37,6 +37,8 @@ typedef struct
 	char *port;
 	char *nick;
 	char *owner;
+	char *ns_nick;
+	char *ns_command;
 
 	char *rbuf; // Receive buffer, for irc_getln
 	chanlist_t *channels;

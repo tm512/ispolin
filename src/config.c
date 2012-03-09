@@ -135,6 +135,27 @@ int config_load (char *filename, config_t *cfg, ircclient_t **clients)
 
 		lua_pop (L, 4);
 
+		lua_pushstring (L, "ns_nick");
+		lua_gettable (L, -2);
+		lua_pushstring (L, "ns_command");
+		lua_gettable (L, -3);
+
+		if (lua_isstring (L, -1) && lua_isstring (L, -2))
+		{
+			cl->ns_nick = (char*) malloc (strlen (lua_tostring (L, -2)) + 1);
+			cl->ns_command = (char*) malloc (strlen (lua_tostring (L, -1)) + 1);
+
+			strncpy (cl->ns_nick, lua_tostring (L, -2), strlen (lua_tostring (L, -2)) + 1);
+			strncpy (cl->ns_command, lua_tostring (L, -1), strlen (lua_tostring (L, -1)) + 1);
+		}
+		else
+		{
+			cl->ns_nick = NULL;
+			cl->ns_command = NULL;
+		}
+
+		lua_pop (L, 2);
+
 		// Load up channels
 		lua_pushstring (L, "channels");
 		lua_gettable (L, -2);
