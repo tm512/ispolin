@@ -66,11 +66,13 @@ void parseargs (int argc, char **argv)
 			{
 				freopen ("/dev/null", "w", stdout);
 				freopen ("/dev/null", "w", stderr);
+				fclose (pidfile);
 			}
 			else
 			{
 				iprint ("Forked to background (pid: %i)", (int) pid);
 				fprintf (pidfile, "%i\n", (int) pid);
+				fclose (pidfile);
 				exit (0);
 			}
 			continue;
