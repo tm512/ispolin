@@ -154,6 +154,7 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 
 		if (!strstr (head.data, "Content-Type: text/html"))
 		{
+			curl_easy_cleanup (c);
 			free (head.data);
 			free (body.data);
 			return; // According to the web server, this is not an HTML file
