@@ -206,7 +206,7 @@ void init (void *mod)
 			break;
 
 		entp = insert_entry (nickbuf, timebuf);
-		entp->offset = lseek (seendb, 0, SEEK_CUR);
+		entp->offset = lseek (seendb, 0, SEEK_CUR) - 36;
 	}
 
 	module_registerfunc (&joinListeners, seenJoin, mod, modname);
