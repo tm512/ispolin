@@ -159,6 +159,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 			irc_privmsg (cl, source, uptime_out);
 		}
 
+		pclose (uptime_pipe);
+
 		return;
 	}
 
