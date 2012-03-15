@@ -107,6 +107,8 @@ void *irc_init (void *p)
 	free (cl->port);
 	free (cl->nick);
 	free (cl->owner);
+	free (cl->ns_nick);
+	free (cl->ns_command);
 	free (cl->rbuf);
 
 	chanlist_t *it = cl->channels;
