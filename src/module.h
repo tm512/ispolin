@@ -24,17 +24,25 @@ typedef void (*partlistener_f) (ircclient_t *cl, char *nick, char *host, char *c
 typedef void (*privmsglistener_f) (ircclient_t *cl, char *nick, char *host, char *source, char *message);
 typedef void (*quitlistener_f) (ircclient_t *cl, char *nick, char *host, char *reason);
 
+typedef struct module_s
+{
+	void *mod;
+	char *modname;
+	struct module_s *next;
+} module_t;
+
 typedef struct listener_s
 {
 	void *func;
-	const char *modname;
-	void *mod;
+	char *modname;
 	struct listener_s *next;
 } listener_t;
 
 int module_load (char *path);
-int module_unload (char *name, listener_t **lp);
-void module_registerfunc (listener_t **l, void *func, void *mod, const char *modname);
+int module_unload (char *name);
+void module_listener_clear (char *name, listener_t **lp);
+void module_registerfunc (listener_t **l, void *func, char *modname);
+void module_die (void);
 
 extern listener_t *joinListeners;
 extern listener_t *nickListeners;

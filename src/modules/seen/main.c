@@ -31,7 +31,7 @@
 #include "config.h"
 #include "module.h"
 
-const char modname [] = "seen";
+char modname [] = "seen";
 
 typedef struct seen_entry_s
 {
@@ -180,7 +180,7 @@ void seenPrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
-void init (void *mod)
+void init (void)
 {
 	char nickbuf [32];
 	unsigned int timebuf;
@@ -209,11 +209,30 @@ void init (void *mod)
 		entp->offset = lseek (seendb, 0, SEEK_CUR) - 36;
 	}
 
-	module_registerfunc (&joinListeners, seenJoin, mod, modname);
-	module_registerfunc (&nickListeners, seenNick, mod, modname);
-	module_registerfunc (&partListeners, seenPart, mod, modname);
-	module_registerfunc (&privmsgListeners, seenPrivmsg, mod, modname);
-	module_registerfunc (&quitListeners, seenQuit, mod, modname);
+	module_registerfunc (&joinListeners, seenJoin, modname);
+	module_registerfunc (&nickListeners, seenNick, modname);
+	module_registerfunc (&partListeners, seenPart, modname);
+	module_registerfunc (&privmsgListeners, seenPrivmsg, modname);
+	module_registerfunc (&quitListeners, seenQuit, modname);
 
 	return;
+}
+
+void deinit (void)
+{
+       int i;
+
+       for (i = 0; i < 128; i++)
+       {
+               seen_entry_t *entry = table [i], *next;
+               while (entry)
+               {
+                       next = entry->next;
+                       free (entry);
+                       entry = next;
+               }
+       }
+
+       close (seendb);
+       return;
 }

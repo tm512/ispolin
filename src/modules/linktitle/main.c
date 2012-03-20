@@ -44,7 +44,7 @@ typedef struct
 	unsigned int len;
 } memchunk_t;
 
-const char modname [] = "linktitle";
+char modname [] = "linktitle";
 memchunk_t head, body;
 
 size_t writedata (void *ptr, size_t size, size_t nmeb, void *stream)
@@ -184,9 +184,15 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 	return;
 }
 
-void init (void *mod)
+void init (void)
 {
 	curl_global_init (CURL_GLOBAL_ALL);
-	module_registerfunc (&privmsgListeners, linktitle, mod, modname);
+	module_registerfunc (&privmsgListeners, linktitle, modname);
 	return;
+}
+
+void deinit (void)
+{
+       curl_global_cleanup ();
+       return;
 }

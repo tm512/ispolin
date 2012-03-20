@@ -31,18 +31,7 @@
 #include "config.h"
 #include "module.h"
 
-#define modcheck(lst) \
-{ \
-	listener_t *it; \
-	for (it = lst; it; it = it->next) \
-		if (strstr (it->modname, modname) == it->modname) \
-		{ \
-			irc_notice (cl, nick, "Module already loaded!"); \
-			return; \
-		} \
-}
-
-const char modname [] = "core";
+char modname [] = "core";
 
 void die (char *msg);
 
@@ -99,8 +88,6 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		char *modcmd = strtok_r (NULL, " ", &tokbuf);
 		char *modname = modcmd + strlen (modcmd) + 1;;
 
-		dprint ("%s %s", modcmd, modname);
-
 		if (!strlen (modname))
 		{
 			irc_notice (cl, nick, "No module name specified!");
@@ -112,11 +99,6 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 			char filepath [strlen (globalcfg.modpath) + strlen (modname) + 4];
 			sprintf (filepath, "%s/%s.so", globalcfg.modpath, modname);
 
-			modcheck (privmsgListeners);
-			modcheck (joinListeners);
-			modcheck (partListeners);
-			modcheck (quitListeners);
-
 			if (!module_load (filepath))
 				irc_notice (cl, nick, "Loaded module: %s", filepath);
 			else
@@ -124,7 +106,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		}
 		else if (strstr (modcmd, "unload") == modcmd)
 		{
-			if (!module_unload (modname, &privmsgListeners))
+			if (strcmp (modname, "core") && !module_unload (modname))
 				irc_notice (cl, nick, "Unloaded module: %s", modname);
 			else
 				irc_notice (cl, nick, "Failed to unload module: %s", modname);
@@ -167,8 +149,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
-void init (void *mod)
+void init (void)
 {
-	module_registerfunc (&privmsgListeners, corePrivmsg, mod, modname);
+	module_registerfunc (&privmsgListeners, corePrivmsg, modname);
 	return;
 }

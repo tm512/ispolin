@@ -24,7 +24,10 @@
 #include "irc.h"
 #include "module.h"
 
-typedef void (*modinit_f) (void *mod);
+typedef void (*modinit_f) (void);
+typedef void (*moddeinit_f) (void);
+
+module_t *modules = NULL;
 
 listener_t *joinListeners = NULL;
 listener_t *nickListeners = NULL;
@@ -38,12 +41,15 @@ int module_load (char *path)
 {
 	modinit_f init;
 	void *mod = dlopen (path, RTLD_LAZY);
+	module_t *it = modules;
+	char *modname;
 
 	iprint ("Loading module: %s", path);
 
 	if (!mod)
 	{
 		eprint (0, "Couldn't load module %s (%s).", path, dlerror ());
+		dlclose (mod);
 		return 1;
 	}
 
@@ -52,67 +58,148 @@ int module_load (char *path)
 	if (!init)
 	{
 		eprint (0, "Couldn't load init function from module %s (%s).", path, dlerror ());
+		dlclose (mod);
 		return 2;
 	}
 
-	init (mod);
+	modname = (char*) dlsym (mod, "modname");
+	if (!modname)
+	{
+		eprint (0, "Module %s has no name.");
+		dlclose (mod);
+		return 3;
+	}
+
+	if (it) // ensure that this module isn't loaded
+	{
+		while (it)
+		{
+			if (!strcmp (modname, it->modname))
+			{
+				eprint (0, "Module %s is already loaded", modname);
+				dlclose (mod);
+				return 4;
+			}
+			it = it->next;
+		}
+		it = modules;
+	}
+			
+	// Add module to linked list
+	if (it)
+	{
+		while (it->next)
+			it = it->next;
+
+		it->next = malloc (sizeof (module_t));
+		it = it->next;
+	}
+	else
+		modules = it = malloc (sizeof (module_t));
+
+	it->mod = mod;
+	it->modname = modname;
+	it->next = NULL;
+
+	if (!it->modname)
+	{
+		free (it);
+		it = NULL;
+		return 3;
+	}
+
+	init ();
 
 	return 0;
 }
 
-#define MAX(a,b) ((a < b) ? b : a)
-
-int module_unload (char *name, listener_t **lp)
+int module_unload (char *name)
 {
-	listener_t *it = *lp;
+	module_t *it = modules;
 	void *mod = NULL;
+	moddeinit_f deinit;
 
-	if (!strncmp ("core", name, MAX (4, strlen (it->modname))))
-		return 1; // Do not unload the core module
+	// Clear all listeners that this module has
+	module_listener_clear (name, &joinListeners);
+	module_listener_clear (name, &nickListeners);
+	module_listener_clear (name, &partListeners);
+	module_listener_clear (name, &privmsgListeners);
+	module_listener_clear (name, &quitListeners);
 
-	if (!strncmp (name, it->modname, MAX (strlen (name), strlen (it->modname))))
+	// This closes up the linked list to exclude the module_t we need to unload
+	// Might not be that effecient for huge linked lists, but it will work for us
+	while (it)
 	{
-		(*lp) = it->next;
-		mod = it->mod;
-		free (it);
-	}
+		module_t *next = it->next;
+		module_t *prev = modules;
 
-	while (1)
-	{
-		if (!it->next)
-			break;
-
-		if (!strncmp (name, it->next->modname, MAX (strlen (name), strlen (it->next->modname))))
+		if (!strcmp (name, it->modname)) // this module matches, need to delete it
 		{
-			listener_t *next = it->next->next;
+			if (it == modules) // if this is the first in the list
+				modules = it->next; // move the start of the list forward
+			else // we need to find the previous 
+			{
+				while (prev->next != it)
+					prev = prev->next;
 
-			if (mod && mod != it->next->mod) // Huh?
-				dlclose (mod);
+				prev->next = it->next;
+			}
 
-			mod = it->next->mod;
+			deinit = (moddeinit_f) dlsym (it->mod, "deinit");
+			if (deinit)
+				deinit ();
 
-			free (it->next);
-			it->next = next;
+			dlclose (it->mod);
+			free (it);
+			break;
 		}
+
+		it = next;
 	}
 
-	if (mod)
+	if (it)
 	{
-		iprint ("Unloaded module: %s", name);
-		dlclose (mod);
+		iprint ("Successfully unloaded module: %s", name);
+		return 0;
 	}
 	else
 	{
-		eprint (0, "Module %s doesn't appear to be loaded", name);
-		return 2;
+		iprint ("Module %s is not loaded", name);
+		return 1;
 	}
-
-	return 0;
 }
 
-#undef MAX
+void module_listener_clear (char *name, listener_t **lp)
+{
+	listener_t *it = *lp;
 
-void module_registerfunc (listener_t **lp, void *func, void *mod, const char *modname)
+	while (it)
+	{
+		listener_t *next = it->next;
+		listener_t *prev = *lp;
+
+		if (!strcmp (name, it->modname))
+		{
+			if (it == *lp) // first in the list...
+				(*lp) = it->next;
+			else
+			{
+				while (prev->next != it)
+					prev = prev->next;
+
+				prev->next = it->next;
+			}
+
+			free (it);
+		}
+
+		it = next;
+	}
+
+	return;
+}
+
+void module_registerfunc (listener_t **lp, void *func, char *modname)
 {
 	listener_t *l = *lp;
 
@@ -122,7 +209,6 @@ void module_registerfunc (listener_t **lp, void *func, void *mod, const char *mo
 		l = *lp;
 		l->func = func;
 		l->modname = modname;
-		l->mod = mod;
 		l->next = NULL;
 	}
 	else
@@ -133,9 +219,26 @@ void module_registerfunc (listener_t **lp, void *func, void *mod, const char *mo
 		l->next = (listener_t*) malloc (sizeof (listener_t));
 		l->next->func = func;
 		l->next->modname = modname;
-		l->next->mod = mod;
 		l->next->next = NULL;
 	}
+
+	return;
+}
+
+void module_die (void)
+{
+	module_t *it = modules;
+	moddeinit_f deinit;
+
+	if (it)
+		while (it)
+		{
+			deinit = (moddeinit_f) dlsym (it->mod, "deinit");
+			if (deinit)
+				deinit ();
+
+			it = it->next;
+		}
 
 	return;
 }

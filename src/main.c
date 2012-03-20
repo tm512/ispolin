@@ -90,6 +90,8 @@ void die (char *msg)
 		if (clients [i])
 			irc_quit (clients [i], msg);
 
+	module_die ();
+
 	return;
 }
 
