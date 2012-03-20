@@ -170,7 +170,7 @@ void seenPrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 			{
 				char timestring [32];
 				time_t t = (time_t) entry->seen_date;
-				strftime (timestring, 32, "%b %d, %Y, at %T", localtime (&t));
+				strftime (timestring, 32, "%b %d, %Y, at %T %Z", localtime (&t));
 				irc_privmsg (cl, source, "%s: The last time I saw activity from %s was on %s.", nick, entry->nick, timestring);
 			}
 			else
