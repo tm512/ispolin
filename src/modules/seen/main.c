@@ -75,6 +75,7 @@ seen_entry_t *insert_entry (char *nick, unsigned int seen_date)
 
 	strncpy (entry->nick, nick, 32);
 	entry->seen_date = seen_date;
+	entry->next = NULL;
 
 	return entry;
 }
