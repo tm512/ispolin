@@ -35,6 +35,8 @@ char modname [] = "core";
 
 void die (char *msg);
 
+extern int net_recvd, net_sent;
+
 void ctcpHandler (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
 	message ++;
@@ -61,6 +63,13 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 		ctcpHandler (cl, nick, host, source, buf);
 
 	buf ++;
+
+	if (strstr (buf, "bw") == buf)
+	{
+		irc_privmsg (cl, source, "Since I was last started, I have sent a total of %.3fKB and received a total of %.3fKB.",
+		             (float) net_sent / 1024, (float) net_recvd / 1024);
+		return;
+	}
 
 	if (strstr (buf, "info") == buf)
 	{

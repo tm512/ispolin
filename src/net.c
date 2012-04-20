@@ -34,6 +34,8 @@
 
 static struct timeval conn_timeout = { 10, 0 };
 
+int net_recvd = 0, net_sent = 0;
+
 int net_connect (const char *host, const char *port)
 {
 	int sock;
@@ -116,6 +118,7 @@ int net_send (int sock, char *buf, unsigned int len)
 		totalSent += tempSent;
 	}
 
+	net_sent += totalSent;
 	return len - totalSent;
 }
 
@@ -146,6 +149,7 @@ int net_recv (int sock, char *buf, unsigned int len)
 		totalRecv += tempRecv;
 	}
 
+	net_recvd += totalRecv;
 	return totalRecv;
 }
 
