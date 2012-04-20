@@ -101,7 +101,7 @@ void *irc_init (void *p)
 		eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
 	}
 
-	// Free the server's resources before returning
+	// Free the client's resources before returning
 	// Set the pointer to NULL so we give a free slot back
 	free (cl->host);
 	free (cl->port);
@@ -250,23 +250,34 @@ void irc_parse (ircclient_t *cl, char *buf)
 int irc_getln (ircclient_t *cl, char *buf)
 {
 	int ret = 0;
-	char *pos = NULL;
+	char *pos = NULL, *tmpos = NULL;
 	char tmpbuf [MAXBUF] = { 0 };
 
 	// Clear the buffer we're sent
 	memset (buf, 0, MAXBUF);
 
-	while ((pos = strstr (cl->rbuf, "\r\n")) == NULL)
+	while ((tmpos = strstr (cl->rbuf, "\r\n")) == NULL && ret < MAXBUF - strlen (cl->rbuf) - 1)
 	{
 		memset (tmpbuf, 0, MAXBUF);
 
-		ret = net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf));
+		ret = net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf) - 1);
 
 		if (ret <= 0)
 			return ret;
 
 		// Copy tmpbuf into the recvbuf
 		memcpy (cl->rbuf + strlen (cl->rbuf), tmpbuf, MAXBUF - strlen (cl->rbuf));
+	}
+
+	// See if we need to truncate the line
+	// If the entire buffer filled before we got an \r\n, add it ourselves
+	if (tmpos)
+		pos = tmpos;
+	else
+	{
+		cl->rbuf [MAXBUF - 2] = '\n';
+		cl->rbuf [MAXBUF - 3] = '\r';
+		pos = cl->rbuf + MAXBUF - 3;
 	}
 
 	// Copy line to buf, add \0
@@ -277,6 +288,11 @@ int irc_getln (ircclient_t *cl, char *buf)
 	memset (tmpbuf, 0, MAXBUF);
 	memcpy (tmpbuf, pos + 2, MAXBUF - (pos + 2 - cl->rbuf));
 	memcpy (cl->rbuf, tmpbuf, MAXBUF);
+
+	// Seems hacky... Recursively call irc_getln again if we didn't get a
+	// complete line, and there is the rest of the line waiting to be read.
+	if (!tmpos)
+		irc_getln (cl, tmpbuf);
 
 	return strlen (buf);
 }
