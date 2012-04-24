@@ -150,7 +150,9 @@ void irc_service (ircclient_t **clients)
 
 					if (ret < 0)
 					{
+						eprint (0, "Connection to %s:%s lost.", clients [i]->host, clients [i]->port);
 						numclients --;
+
 						if (clients [i]->run) // unintentional disconnect, try reconnecting
 							irc_init (clients [i]);
 						else
