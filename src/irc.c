@@ -49,8 +49,8 @@ int irc_init (ircclient_t *cl)
 	cl->s = -1;
 	cl->run = 1;
 
-	dprint ("%x", cl->rbuf);
-	cl->rbuf = (char *) malloc (MAXBUF);
+	if (!cl->rbuf)
+		cl->rbuf = malloc (MAXBUF);
 
 	if (!cl->rbuf)
 		eprint (1, "malloc failed for cl->buf, aborting!");
@@ -112,7 +112,6 @@ void irc_destroy (ircclient_t **clp)
 	free (cl);
 	*clp = NULL;
 
-	numclients --;
 	return;
 }
 
@@ -150,7 +149,13 @@ void irc_service (ircclient_t **clients)
 					}
 
 					if (ret < 0)
-						irc_destroy (&clients [i]);
+					{
+						numclients --;
+						if (clients [i]->run) // unintentional disconnect, try reconnecting
+							irc_init (clients [i]);
+						else
+							irc_destroy (&clients [i]);
+					}
 				}
 			}
 		}
