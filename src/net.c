@@ -23,6 +23,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string.h>
+#include <stropts.h>
+#include <sys/time.h>
 #ifndef linux
 #include <sys/select.h>
 #endif // linux
@@ -32,9 +34,12 @@
 
 #define MAXTRIES 5 // Max tries for send/recv
 
-static struct timeval conn_timeout = { 10, 0 };
+struct timeval conn_timeout = { 10, 0 };
 
 int net_recvd = 0, net_sent = 0;
+int highsock = -1;
+
+fd_set *fds = NULL;
 
 int net_connect (const char *host, const char *port)
 {
@@ -90,6 +95,9 @@ int net_connect (const char *host, const char *port)
 		eprint (0, "Could not connect to %s:%s", host, port);
 		return -1;
 	}
+
+	if (sock > highsock) // Track the highest socket, for select
+		highsock = sock;
 
 	return sock;
 }
@@ -156,5 +164,41 @@ int net_recv (int sock, char *buf, unsigned int len)
 // Wrapper for close()
 int net_close (int sock)
 {
-	return sock >= 0 ? close (sock) : -1;
+	if (sock >= 0)
+	{
+		FD_CLR (sock, fds);
+		return close (sock);
+	}
+	else
+		return -1;
+}
+
+// Add a socket to the reading fdset
+void net_addsock (int sock)
+{
+	if (!fds)
+	{
+		fds = malloc (sizeof (fd_set));
+		FD_ZERO (fds);
+	}
+
+	FD_SET (sock, fds);
+	return;
+}
+
+// See if the socket is set in the fdset (wrapper for FD_ISSET)
+// returns -1 if the socket is set but has no pending data to read (disconnected)
+int net_isset (int sock)
+{
+	if (FD_ISSET (sock, fds))
+		return 1;
+	else
+		return 0;
+}
+
+// wrapper for select ()
+int net_select (void)
+{
+	struct timeval sel_timeout = { 1, 0 };
+	return select (highsock + 1, fds, NULL, NULL, &sel_timeout);
 }

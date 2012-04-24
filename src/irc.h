@@ -44,7 +44,9 @@ typedef struct
 	chanlist_t *channels;
 } ircclient_t;
 
-void *irc_init (void *p);
+int irc_init (ircclient_t *cl);
+void irc_destroy (ircclient_t **clp);
+void irc_service (ircclient_t **clients);
 int irc_login (ircclient_t *cl, char *nick);
 int irc_join (ircclient_t *cl, char *chan, char *pw);
 int irc_part (ircclient_t *cl, char *chan, char *msg);
@@ -55,5 +57,7 @@ int irc_quit (ircclient_t *cl, char *msg);
 void irc_parse (ircclient_t *cl, char *buf);
 int irc_getln (ircclient_t *cl, char *buf);
 int irc_sendln (ircclient_t *cl, char *fmt, ...);
+
+extern int numclients;
 
 #endif // IRC_H__

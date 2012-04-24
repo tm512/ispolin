@@ -38,17 +38,18 @@
 #define stripw(str) \
 	while (strlen (str) > 0 && isspace (str [strlen (str) - 1])) str [strlen (str) - 1] = '\0';
 
-// Initializes an ircclient_t, then starts its loop
-void *irc_init (void *p)
+int numclients = 0;
+
+// Initializes an ircclient_t
+// Returns 0 on success, nonzero on failure
+int irc_init (ircclient_t *cl)
 {
 	int conn_attempts = 0;
-	char buf [MAXBUF] = { 0 };
-	ircclient_t **clp = (ircclient_t**) p;
-	ircclient_t *cl = *clp;
 
 	cl->s = -1;
 	cl->run = 1;
 
+	dprint ("%x", cl->rbuf);
 	cl->rbuf = (char *) malloc (MAXBUF);
 
 	if (!cl->rbuf)
@@ -56,7 +57,7 @@ void *irc_init (void *p)
 
 	memset (cl->rbuf, 0, MAXBUF);
 
-	while (cl->run && conn_attempts <= 5)
+	while (conn_attempts <= 5)
 	{
 		net_close (cl->s);
 
@@ -75,34 +76,20 @@ void *irc_init (void *p)
 			continue;
 		}
 
-		// Success, reset connection attempt count
-		conn_attempts = 0;
-
-		while (irc_getln (cl, buf) >= 0)
-		{
-			#ifdef DEBUG
-			printf ("%s", buf);
-			#endif
-			irc_parse (cl, buf);
-			usleep (10000);
-		}
-
-		eprint (0, "Connection to %s:%s lost.", cl->host, cl->port);
-		conn_attempts ++;
-
-		if (cl->run)
-		{
-			connsleep (1 << conn_attempts);
-		}
+		numclients ++;
+		return 0;
 	}
 
-	if (cl->run)
-	{
-		eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
-	}
+	eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
+	return 1;
+}
 
-	// Free the client's resources before returning
-	// Set the pointer to NULL so we give a free slot back
+// Deinitialize an ircclient_t, set the pointer back to NULL
+void irc_destroy (ircclient_t **clp)
+{
+	ircclient_t *cl = *clp;
+
+	// Free the client's resources
 	free (cl->host);
 	free (cl->port);
 	free (cl->nick);
@@ -125,7 +112,49 @@ void *irc_init (void *p)
 	free (cl);
 	*clp = NULL;
 
+	numclients --;
 	return;
+}
+
+// Main loop. Service all of the IRC clients passed to us
+void irc_service (ircclient_t **clients)
+{
+	int i;
+	char buf [MAXBUF] = { 0 };
+
+	while (1)
+	{
+		if (!numclients)
+			return;
+
+		for (i = 0; i < MAXCLIENTS; i++)
+			if (clients [i])
+				net_addsock (clients [i]->s);
+
+		if (net_select () > 0)
+		{
+			for (i = 0; i < MAXCLIENTS; i++)
+			{
+				if (!clients [i])
+					continue;
+
+				if (net_isset (clients [i]->s))
+				{
+					int ret;
+					while ((ret = irc_getln (clients [i], buf)) > 0)
+					{
+						#ifdef DEBUG
+						printf ("%s", buf);
+						#endif
+						irc_parse (clients [i], buf);
+					}
+
+					if (ret < 0)
+						irc_destroy (&clients [i]);
+				}
+			}
+		}
+	}
 }
 
 // Sends NICK and USER

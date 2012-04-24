@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-#include <pthread.h>
 
 #include "version.h"
 
@@ -31,7 +30,6 @@
 #include "config.h"
 
 ircclient_t *clients [MAXCLIENTS] = { 0 };
-pthread_t threads [MAXCLIENTS];
 char *configpath = "./config.lua";
 config_t globalcfg;
 
@@ -129,11 +127,10 @@ int main (int argc, char **argv)
 
 	for (i = 0; i < MAXCLIENTS; i++)
 		if (clients [i])
-			pthread_create (&threads [i], NULL, irc_init, (void*) &clients [i]);
+			if (irc_init (clients [i]))
+				irc_destroy (&clients [i]);
 
-	for (i = 0; i < MAXCLIENTS; i++)
-		if (clients [i])
-			pthread_join (threads [i], NULL);
-
+	// Main loop:
+	irc_service (clients);
 	return 0;
 }

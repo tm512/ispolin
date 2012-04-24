@@ -22,5 +22,8 @@ int net_connect (const char *host, const char *port);
 int net_send (int sock, char *buf, unsigned int len);
 int net_recv (int sock, char *buf, unsigned int len);
 int net_close (int sock);
+void net_addsock (int sock);
+int net_isset (int sock);
+int net_select (void);
 
 #endif // NET_H__
