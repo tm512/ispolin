@@ -23,7 +23,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string.h>
-#include <stropts.h>
 #include <sys/time.h>
 #ifndef linux
 #include <sys/select.h>
