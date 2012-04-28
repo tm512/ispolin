@@ -31,8 +31,6 @@
 #include "prints.h"
 #include "net.h"
 
-#define MAXTRIES 5 // Max tries for send/recv
-
 struct timeval conn_timeout = { 10, 0 };
 
 int net_recvd = 0, net_sent = 0;
@@ -112,17 +110,13 @@ int net_send (int sock, char *buf, unsigned int len)
 
 	while (totalSent < len)
 	{
-		if ((tempSent = send (sock, buf + totalSent, len - totalSent, 0)) <= 0)
+		if ((tempSent = send (sock, buf + totalSent, len - totalSent, 0)) < 0)
 		{
 			if (errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN)
 				return -1;
-
-			if (sendTries++ < MAXTRIES)
-				continue;
-			else
-				break;
 		}
-		totalSent += tempSent;
+		else
+			totalSent += tempSent;
 	}
 
 	net_sent += totalSent;
@@ -142,18 +136,13 @@ int net_recv (int sock, char *buf, unsigned int len)
 	{
 		if ((tempRecv = recv (sock, buf + totalRecv, len - totalRecv, 0)) <= 0)
 		{
-			if (errno != EWOULDBLOCK && errno != EINPROGRESS && errno != EAGAIN)
+			if ((errno != EWOULDBLOCK && errno != EAGAIN) || !tempRecv)
 				return -1;
-
-			if (!tempRecv) // got hung up on!
-				return -1;
-
-			if (recvTries++ < MAXTRIES)
-				continue;
 			else
-				break;
+				return 0;
 		}
-		totalRecv += tempRecv;
+		else
+			totalRecv += tempRecv;
 	}
 
 	net_recvd += totalRecv;

@@ -13,7 +13,5 @@ incomplete ispolin roadmap
 - Logging
 - Parse command line options
 - SSL support
-- Less hacky loop for ircclient_t instances
-  (use select in irc_getln or something similar in order to wait for something to read, rather than failing)
 - Add Lua scripting API
 - General cleaning and refactoring (obviously!)
