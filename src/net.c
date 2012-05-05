@@ -116,10 +116,12 @@ int net_send (int sock, char *buf, unsigned int len)
 				return -1;
 		}
 		else
+		{
 			totalSent += tempSent;
+			net_sent += tempSent;
+		}
 	}
 
-	net_sent += totalSent;
 	return len - totalSent;
 }
 
@@ -139,14 +141,15 @@ int net_recv (int sock, char *buf, unsigned int len)
 			if ((errno != EWOULDBLOCK && errno != EAGAIN) || !tempRecv)
 				return -1;
 			else
-		//		return 0;
 				break;
 		}
 		else
+		{
 			totalRecv += tempRecv;
+			net_recvd += tempRecv;
+		}
 	}
 
-	net_recvd += totalRecv;
 	return totalRecv;
 }
 
