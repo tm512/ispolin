@@ -139,7 +139,8 @@ int net_recv (int sock, char *buf, unsigned int len)
 			if ((errno != EWOULDBLOCK && errno != EAGAIN) || !tempRecv)
 				return -1;
 			else
-				return 0;
+		//		return 0;
+				break;
 		}
 		else
 			totalRecv += tempRecv;

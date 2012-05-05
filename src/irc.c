@@ -298,7 +298,7 @@ int irc_getln (ircclient_t *cl, char *buf)
 
 		ret = net_recv (cl->s, tmpbuf, MAXBUF - strlen (cl->rbuf) - 1);
 
-		if (ret < 0)
+		if (ret <= 0)
 			return ret;
 
 		// Copy tmpbuf into the recvbuf
