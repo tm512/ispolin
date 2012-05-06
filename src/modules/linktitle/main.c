@@ -35,6 +35,8 @@
 #include "irc.h"
 #include "module.h"
 
+#include "htmlchar.h"
+
 #define stripw(str) \
 	while (strlen (str) > 0 && isspace (str [strlen (str) - 1])) str [strlen (str) - 1] = '\0';
 
@@ -73,15 +75,37 @@ void condense_spaces (char *c)
 		*d++ = *c;
 		if (isspace (*c))
 		{
-			do
-			{
-				c ++;
-			} while (isspace (*c));
+			while (isspace (*c))
+				c++;
 			c --;
 		}
 	}
 
 	*d = 0;
+	return;
+}
+
+void convertchars (char *c)
+{
+	int i;
+	for (i = 0; htmlchar [i].code; i++)
+	{
+		char *d = strstr (c, htmlchar [i].code), *e;
+
+		if (!d)
+			continue;
+
+		e = strstr (d, ";") + 1;
+
+		strcpy (d, htmlchar [i].ch);
+		d += strlen (htmlchar [i].ch);
+
+		// In-place copy
+		while (*e)
+			*(d++) = *(e++);
+		*d = '\0';
+	}
+
 	return;
 }
 
@@ -109,6 +133,10 @@ void get_title (char **link, char **ttag)
 	stripw ((*ttag));
 	while (isspace (**ttag))
 		(*ttag) ++;
+
+	// Convert &amp; type character codes
+	if (strstr (*ttag, "&"))
+		convertchars (*ttag);
 
 	// Now, we need to strip apart the link
 	*link = strstr (*link, "://") + 3;
