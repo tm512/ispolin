@@ -88,22 +88,24 @@ void condense_spaces (char *c)
 void convertchars (char *c)
 {
 	int i;
+	char *d, *e;
 	for (i = 0; htmlchar [i].code; i++)
 	{
-		char *d = strstr (c, htmlchar [i].code), *e;
+		while ((d = strstr (c, htmlchar [i].code)))
+		{
+			if (!d)
+				continue;
 
-		if (!d)
-			continue;
+			e = strstr (d, ";") + 1;
 
-		e = strstr (d, ";") + 1;
+			strcpy (d, htmlchar [i].ch);
+			d += strlen (htmlchar [i].ch);
 
-		strcpy (d, htmlchar [i].ch);
-		d += strlen (htmlchar [i].ch);
-
-		// In-place copy
-		while (*e)
-			*(d++) = *(e++);
-		*d = '\0';
+			// In-place copy
+			while (*e)
+				*(d++) = *(e++);
+			*d = '\0';
+		}
 	}
 
 	return;
