@@ -99,15 +99,16 @@ void irc_destroy (ircclient_t **clp)
 	free (cl->rbuf);
 
 	chanlist_t *it = cl->channels;
-	while (1)
-	{
-		chanlist_t *next = it->next;
-		free (it);
-		if (next)
-			it = next;
-		else
-			break;
-	}
+	if (it)
+		while (1)
+		{
+			chanlist_t *next = it->next;
+			free (it);
+			if (next)
+				it = next;
+			else
+				break;
+		}
 
 	free (cl);
 	*clp = NULL;

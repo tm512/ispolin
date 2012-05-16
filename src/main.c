@@ -33,19 +33,21 @@ ircclient_t *clients [MAXCLIENTS] = { 0 };
 char *configpath = "./config.lua";
 config_t globalcfg;
 
+#define argif(longform,shortform) if (!strcmp (argv [i], longform) || !strcmp (argv [i], shortform))
+
 void parseargs (int argc, char **argv)
 {
 	int i;
 	for (i = 1; i < argc; i++)
 	{
-		int arglen = strlen (argv [i]);
-		if (!strcmp (argv [i], "--config") || !strcmp (argv [i], "-c"))
+		argif ("--config", "-c")
 		{
-			configpath = argv [i + 1];
+			if (i + 1 < argc && argv [i + 1] [0] != '-')
+				configpath = argv [i + 1];
 			continue;
 		}
 
-		if (!strcmp (argv [i], "--daemon") || !strcmp (argv [i], "-d"))
+		argif ("--daemon", "-d")
 		{
 			pid_t pid;
 			FILE *pidfile = NULL;
@@ -79,6 +81,8 @@ void parseargs (int argc, char **argv)
 
 	return;
 }
+
+#undef argif
 
 // Kills off all connections
 void die (char *msg)
