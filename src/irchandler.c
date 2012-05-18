@@ -85,18 +85,14 @@ void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 void join_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
-	char *channel;
+	if (args [0] == ':')
+		args ++;
 
-	if ((channel = strstr (args, ":")) == NULL)
-		channel = args;
-	else
-		channel += 1; // need to remove the ":"
-
-	ircprint (cl, "[%s] %s (%s) joins.", channel, nick, host);
+	ircprint (cl, "[%s] %s (%s) joins.", args, nick, host);
 
 	listener_t *l;
 	for (l = joinListeners; l; l = l->next)
-		((joinlistener_f) l->func) (cl, nick, host, channel);
+		((joinlistener_f) l->func) (cl, nick, host, args);
 
 	return;
 }
@@ -118,6 +114,9 @@ void mode_handler (ircclient_t *cl, char *nick, char *host, char *args)
 	char *tokbuf = alloca (strlen (args));
 	char *channel = strtok_r (args, " ", &tokbuf);
 	char *mode = channel + strlen (channel) + 1;
+
+	if (mode [0] == ':')
+		mode ++;
 
 	ircprint (cl, "[%s] %s sets mode [%s].", channel, nick, mode);
 
