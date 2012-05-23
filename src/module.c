@@ -230,15 +230,14 @@ void module_die (void)
 	module_t *it = modules;
 	moddeinit_f deinit;
 
-	if (it)
-		while (it)
-		{
-			deinit = (moddeinit_f) dlsym (it->mod, "deinit");
-			if (deinit)
-				deinit ();
+	while (it)
+	{
+		deinit = (moddeinit_f) dlsym (it->mod, "deinit");
+		if (deinit)
+			deinit ();
 
-			it = it->next;
-		}
+		it = it->next;
+	}
 
 	return;
 }

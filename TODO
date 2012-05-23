@@ -11,7 +11,6 @@ incomplete ispolin roadmap
   - Log statistics parser (complicated?)
 - More handlers
 - Logging
-- Parse command line options
 - SSL support
 - Add Lua scripting API
 - General cleaning and refactoring (obviously!)

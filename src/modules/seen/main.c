@@ -181,9 +181,12 @@ void seenPrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	return;
 }
 
+extern char *localdir;
+
 void init (void)
 {
 	char nickbuf [32];
+	char *sdbpath;
 	unsigned int timebuf;
 	seen_entry_t *entp;
 	int i;
@@ -191,7 +194,10 @@ void init (void)
 	for (i = 0; i < 128; i++)
 		table [i] = NULL;
 
-	seendb = open ("./seen.db", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR); // todo - variable
+	sdbpath = alloca (9 + strlen (localdir));
+	sprintf (sdbpath, "%s/seen.db", localdir);
+
+	seendb = open (sdbpath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (seendb < 0)
 	{
 		eprint (0, "seen: Couldn't open or create database file.");
@@ -221,19 +227,19 @@ void init (void)
 
 void deinit (void)
 {
-       int i;
+	int i;
 
-       for (i = 0; i < 128; i++)
-       {
-               seen_entry_t *entry = table [i], *next;
-               while (entry)
-               {
-                       next = entry->next;
-                       free (entry);
-                       entry = next;
-               }
-       }
+	for (i = 0; i < 128; i++)
+	{
+		seen_entry_t *entry = table [i], *next;
+		while (entry)
+		{
+			next = entry->next;
+			free (entry);
+			entry = next;
+		}
+	}
 
-       close (seendb);
-       return;
+	close (seendb);
+	return;
 }

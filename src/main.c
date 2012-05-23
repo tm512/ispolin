@@ -17,6 +17,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -30,24 +32,25 @@
 #include "config.h"
 
 ircclient_t *clients [MAXCLIENTS] = { 0 };
-char *configpath = "./config.lua";
+char *configpath = NULL;
+char *localdir = NULL;
 config_t globalcfg;
 
-#define argif(longform,shortform) if (!strcmp (argv [i], longform) || !strcmp (argv [i], shortform))
+#define arg(longform,shortform) if (!strcmp (argv [i], longform) || !strcmp (argv [i], shortform))
 
 void parseargs (int argc, char **argv)
 {
 	int i;
 	for (i = 1; i < argc; i++)
 	{
-		argif ("--config", "-c")
+		arg ("--config", "-c")
 		{
 			if (i + 1 < argc && argv [i + 1] [0] != '-')
 				configpath = argv [i + 1];
 			continue;
 		}
 
-		argif ("--daemon", "-d")
+		arg ("--daemon", "-d")
 		{
 			pid_t pid;
 			FILE *pidfile = NULL;
@@ -77,12 +80,19 @@ void parseargs (int argc, char **argv)
 			}
 			continue;
 		}
+
+		arg ("--localdir", "-l")
+		{
+			if (i + 1 < argc && argv [i + 1] [0] != '-')
+				localdir = argv [i + 1];
+			continue;
+		}
 	}
 
 	return;
 }
 
-#undef argif
+#undef arg
 
 // Kills off all connections
 void die (char *msg)
@@ -114,6 +124,38 @@ int main (int argc, char **argv)
 	fprintf (stdout, "[\033[1m-\033[0m] \033[2mversion %s%s compiled on " __DATE__ "\033[0m\n", ISP_VERSION, GIT_VERSION);
 
 	parseargs (argc, argv);
+
+	// Set up localdir path
+	if (!localdir)
+	{
+		char *home = getenv ("HOME");
+		localdir = malloc (10 + strlen (home));
+		sprintf (localdir, "%s/.ispolin", home);
+	}	
+
+	// Create localdir if needed
+	struct stat tmpstat;
+	if (stat (localdir, &tmpstat))
+	{
+		if (!mkdir (localdir, S_IRUSR | S_IWUSR | S_IXUSR))
+			iprint ("Created local data directory: %s", localdir);
+		else
+			eprint (1, "Could not create local data directory: %s", localdir);
+	}
+
+	// Set up config path
+	if (!configpath)
+	{
+		configpath = malloc (12 + strlen (localdir));
+		sprintf (configpath, "%s/config.lua", localdir);
+
+		// if the config doesn't exist, open the default
+		if (stat (configpath, &tmpstat))
+		{
+			free (configpath);
+			configpath = "./config.lua";
+		}
+	}
 
 	config_load (configpath, &globalcfg, clients);
 
