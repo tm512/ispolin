@@ -227,17 +227,22 @@ void module_registerfunc (listener_t **lp, void *func, char *modname)
 
 void module_die (void)
 {
-	module_t *it = modules;
+	module_t *it = modules, *next;
 	moddeinit_f deinit;
 
 	while (it)
 	{
+		next = it->next;
+
 		deinit = (moddeinit_f) dlsym (it->mod, "deinit");
 		if (deinit)
 			deinit ();
 
-		it = it->next;
+		free (it);
+		it = next;
 	}
+
+	modules = NULL; // Don't run module_die again
 
 	return;
 }
