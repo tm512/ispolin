@@ -1,6 +1,6 @@
 #!/bin/sh
 
-isp_version="0.1"
+isp_version="0.2"
 git_version=""
 
 if [ -n $(which git) ] && [ -d .git ] ; then git_version=".git-$(git rev-parse --short HEAD)" ; fi
