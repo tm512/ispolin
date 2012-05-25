@@ -1,0 +1,24 @@
+/*
+   ispolin
+   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
+
+   Ispolin is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License, version 3, as
+   published by the Free Software Foundation.
+
+   Ispolin is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Ispolin.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef LUAPI_H__
+#define LUAPI_H__
+
+void luapi_init (void);
+void luapi_loadconfig (char *path);
+
+#endif // LUAPI_H__

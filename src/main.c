@@ -30,6 +30,7 @@
 #include "irc.h"
 #include "module.h"
 #include "config.h"
+#include "luapi.h"
 
 ircclient_t *clients [MAXCLIENTS] = { 0 };
 char *configpath = NULL;
@@ -125,6 +126,8 @@ int main (int argc, char **argv)
 
 	parseargs (argc, argv);
 
+	luapi_init ();
+
 	// Set up localdir path
 	if (!localdir)
 	{
@@ -157,7 +160,7 @@ int main (int argc, char **argv)
 		}
 	}
 
-	config_load (configpath, &globalcfg, clients);
+	luapi_loadconfig (configpath);
 
 	coremodule = (char*) malloc (strlen (globalcfg.modpath) + 8);
 	sprintf (coremodule, "%score.so", globalcfg.modpath);

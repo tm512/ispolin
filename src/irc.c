@@ -80,7 +80,7 @@ int irc_init (ircclient_t *cl)
 		return 0;
 	}
 
-	eprint (0, "Exhausted reconnection attempts to %s:%s, giving up.", cl->host, cl->port);
+	eprint (0, "Exhausted reconnection attempts to %s:%s, giving up", cl->host, cl->port);
 	return 1;
 }
 
@@ -151,7 +151,7 @@ void irc_service (ircclient_t **clients)
 
 					if (ret < 0)
 					{
-						eprint (0, "Connection to %s:%s lost.", clients [i]->host, clients [i]->port);
+						eprint (0, "Connection to %s:%s lost", clients [i]->host, clients [i]->port);
 						numclients --;
 
 						if (clients [i]->run) // unintentional disconnect, try reconnecting
