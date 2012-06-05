@@ -103,6 +103,8 @@ void irc_destroy (ircclient_t **clp)
 		while (1)
 		{
 			chanlist_t *next = it->next;
+			free (it->name);
+			free (it->pass);
 			free (it);
 			if (next)
 				it = next;

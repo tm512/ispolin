@@ -19,12 +19,11 @@
 #define IRC_H__
 
 #define MAXCLIENTS 16
-#define MAXCHANLEN 32
 
 typedef struct chanlist_s
 {
-	char name [MAXCHANLEN];
-	char pass [MAXCHANLEN];
+	char *name;
+	char *pass;
 	struct chanlist_s *next;
 } chanlist_t;
 
@@ -59,5 +58,6 @@ int irc_getln (ircclient_t *cl, char *buf);
 int irc_sendln (ircclient_t *cl, char *fmt, ...);
 
 extern int numclients;
+extern ircclient_t *clients [MAXCLIENTS];
 
 #endif // IRC_H__

@@ -75,7 +75,7 @@ void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 		irc_privmsg (cl, cl->ns_nick, "%s", cl->ns_command);
 
 	for (it = cl->channels; it; it = it->next)
-		if (strlen (it->name) && strlen (it->pass))
+		if (strlen (it->name) && it->pass && strlen (it->pass))
 			irc_join (cl, it->name, it->pass);
 		else if (strlen (it->name))
 			irc_join (cl, it->name, NULL);

@@ -32,8 +32,6 @@ typedef struct
 	char *modlist [MAXMODULES];
 } config_t;
 
-int load_config (char *filename, config_t *cfg, ircclient_t **clients);
-
 extern config_t globalcfg;
 
 #endif // CONFIG_H__

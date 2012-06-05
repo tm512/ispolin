@@ -162,6 +162,7 @@ int main (int argc, char **argv)
 
 	luapi_loadconfig (configpath);
 
+	globalcfg.modpath = "./modules/"; // fixme lol
 	coremodule = (char*) malloc (strlen (globalcfg.modpath) + 8);
 	sprintf (coremodule, "%score.so", globalcfg.modpath);
 	module_load (coremodule);
