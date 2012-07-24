@@ -182,7 +182,7 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 		curl_easy_setopt (c, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_perform (c);
 
-		if (!strstr (head.data, "Content-Type: text/html"))
+		if (!strstr (head.data, "Content-Type: text/html") || strstr (head.data, "HTTP/1.0 400 Bad Request") == head.data)
 		{
 			curl_easy_cleanup (c);
 			free (head.data);
