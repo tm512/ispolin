@@ -47,44 +47,18 @@ static char *deconst (const char *source)
 int luapi_setuser (lua_State *L)
 {
 	// setuser (nick, username, realname)
-	int nargs = lua_gettop (L), i;
-	if (nargs != 3)
-	{
-		lua_pushstring (L, "Incorrect number of arguments");
-		lua_error (L);
-	}
-
-	for (i = 1; i <= nargs; i++)
-		if (!lua_isstring (L, i))
-		{
-			lua_pushstring (L, "Invalid argument");
-			lua_error (L);
-		}
-
-
-	globalcfg.nick = deconst (lua_tostring (L, 1));
-	globalcfg.username = deconst (lua_tostring (L, 2));
-	globalcfg.realname = deconst (lua_tostring (L, 3));
+	globalcfg.nick = deconst (luaL_checkstring (L, 1));
+	globalcfg.username = deconst (luaL_checkstring (L, 2));
+	globalcfg.realname = deconst (luaL_checkstring (L, 3));
 
 	return 0;
 }
 
 int luapi_setprefix (lua_State *L)
 {
-	int nargs = lua_gettop (L);
-	if (nargs != 1)
-	{
-		lua_pushstring (L, "Incorrect number of arguments");
-		lua_error (L);
-	}
+	// setprefix (prefix)
 
-	if (!lua_isstring (L, 1))
-	{
-		lua_pushstring (L, "Invalid argument");
-		lua_error (L);
-	}
-
-	globalcfg.prefix = lua_tostring (L, 1) [0];
+	globalcfg.prefix = luaL_checkstring (L, 1) [0];
 
 	return 0;
 }
@@ -92,18 +66,7 @@ int luapi_setprefix (lua_State *L)
 int luapi_irc_connect (lua_State *L)
 {
 	// irc_connect (host, port, [password])
-	int nargs = lua_gettop (L), i;
-	if (nargs != 2 && nargs != 3)
-	{
-		lua_pushstring (L, "Incorrect number of arguments");
-		lua_error (L);
-	}
-
-	if (!lua_isstring (L, 1) || !lua_isstring (L, 2) || (nargs == 3 && !lua_isstring (L, 3)))
-	{
-		lua_pushstring (L, "Invalid argument");
-		lua_error (L);
-	}
+	int i;
 
 	for (i = 0; i < MAXCLIENTS && clients [i]; i++); // find empty slot
 	if (i >= MAXCLIENTS)
@@ -116,8 +79,8 @@ int luapi_irc_connect (lua_State *L)
 	clients [i] = malloc (sizeof (ircclient_t));
 	memset (clients [i], 0, sizeof (ircclient_t));
 
-	clients [i]->host = deconst (lua_tostring (L, 1));
-	clients [i]->port = deconst (lua_tostring (L, 2));
+	clients [i]->host = deconst (luaL_checkstring (L, 1));
+	clients [i]->port = deconst (luaL_checkstring (L, 2));
 	clients [i]->nick = globalcfg.nick;
 
 	lua_pushnumber (L, i);
@@ -126,21 +89,10 @@ int luapi_irc_connect (lua_State *L)
 
 int luapi_irc_setowner (lua_State *L)
 {
-	int nargs = lua_gettop (L), cln;
+	int cln;
 	ircclient_t *cl;
-	if (nargs != 1 && nargs != 2)
-	{
-		lua_pushstring (L, "Incorrect number of arguments");
-		lua_error (L);
-	}
 
-	if (!lua_isnumber (L, 1) || !lua_isstring (L, 2))
-	{
-		lua_pushstring (L, "Invalid argument");
-		lua_error (L);
-	}
-
-	cln = lua_tonumber (L, 1);
+	cln = luaL_checknumber (L, 1);
 	if (cln >= MAXCLIENTS)
 	{
 		lua_pushstring (L, "Client number too high");
@@ -154,27 +106,16 @@ int luapi_irc_setowner (lua_State *L)
 		lua_error (L);
 	}
 
-	cl->owner = deconst (lua_tostring (L, 2));
+	cl->owner = deconst (luaL_checkstring (L, 2));
 	return 0;
 }
 
 int luapi_irc_addchannel (lua_State *L)
 {
-	int nargs = lua_gettop (L), cln;
+	int cln;
 	ircclient_t *cl;
-	if (nargs != 2 && nargs != 3)
-	{
-		lua_pushstring (L, "Incorrect number of arguments");
-		lua_error (L);
-	}
 
-	if (!lua_isnumber (L, 1) || !lua_isstring (L, 2) || (nargs == 3 && !lua_isstring (L, 3)))
-	{
-		lua_pushstring (L, "Invalid argument");
-		lua_error (L);
-	}
-
-	cln = lua_tonumber (L, 1);
+	cln = luaL_checknumber (L, 1);
 	if (cln >= MAXCLIENTS)
 	{
 		lua_pushstring (L, "Client number too high");
@@ -206,9 +147,8 @@ int luapi_irc_addchannel (lua_State *L)
 		memset (ch, 0, sizeof (chanlist_t));
 	}
 
-	ch->name = deconst (lua_tostring (L, 2));
-	if (nargs == 3)
-		ch->pass = deconst (lua_tostring (L, 3));
+	ch->name = deconst (luaL_checkstring (L, 2));
+	ch->pass = deconst (luaL_optstring (L, 3, NULL));
 
 	return 0;
 }
@@ -219,15 +159,20 @@ void luapi_init (void)
 {
 	iprint ("Initializing Lua API (Using %s)", LUA_RELEASE);
 
-	if (!(Lst = lua_open ()))
+	if (!(Lst = luaL_newstate ()))
 		eprint (1, "Could not initialize Lua");
 
 	luaL_openlibs (Lst);
+
+	// bind functions
 	lua_register (Lst, "setuser", luapi_setuser);
 	lua_register (Lst, "setprefix", luapi_setprefix);
 	lua_register (Lst, "irc_connect", luapi_irc_connect);
 	lua_register (Lst, "irc_setowner", luapi_irc_setowner);
 	lua_register (Lst, "irc_addchannel", luapi_irc_addchannel);
+
+	// run lua script that wraps all the functions nicely
+	luaL_dofile (Lst, "scripts/init.lua");
 
 	return;
 }
