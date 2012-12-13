@@ -179,6 +179,7 @@ void linktitle (ircclient_t *cl, char *nick, char *host, char *source, char *mes
 		curl_easy_setopt (c, CURLOPT_WRITEHEADER, (void*) &head);
 		curl_easy_setopt (c, CURLOPT_WRITEDATA, (void*) &body);
 		curl_easy_setopt (c, CURLOPT_NOBODY, 1);
+		curl_easy_setopt (c, CURLOPT_TIMEOUT, 5);
 		curl_easy_setopt (c, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_perform (c);
 

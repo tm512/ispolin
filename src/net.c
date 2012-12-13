@@ -93,9 +93,6 @@ int net_connect (const char *host, const char *port)
 		return -1;
 	}
 
-	if (sock > highsock) // Track the highest socket, for select
-		highsock = sock;
-
 	return sock;
 }
 
@@ -174,6 +171,7 @@ void net_addsock (int sock)
 		FD_ZERO (fds);
 	}
 
+	highsock = (sock > highsock) ? sock : highsock;
 	FD_SET (sock, fds);
 	return;
 }
@@ -192,5 +190,8 @@ int net_isset (int sock)
 int net_select (void)
 {
 	struct timeval sel_timeout = { 1, 0 };
-	return select (highsock + 1, fds, NULL, NULL, &sel_timeout);
+	int ret = select (highsock + 1, fds, NULL, NULL, &sel_timeout);
+
+	highsock = -1; // reset for next loop
+	return ret;
 }

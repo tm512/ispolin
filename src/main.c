@@ -32,6 +32,10 @@
 #include "config.h"
 #include "luapi.h"
 
+#ifdef DEBUG
+#include <sys/resource.h>
+#endif
+
 ircclient_t *clients [MAXCLIENTS] = { 0 };
 char *configpath = NULL;
 char *localdir = NULL;
@@ -116,6 +120,23 @@ void sigdie (int sig)
 	die (msg);
 }
 
+void segvdie (int sig)
+{
+	// Attempt to clean up after getting a segfault.
+	// If this function raises another segfault, it will do the default action.
+	signal (sig, SIG_DFL);
+
+	module_die ();
+
+	int i;
+	for (i = 0; i < MAXCLIENTS; i++)
+		if (clients [i])
+			irc_quit (clients [i], "Segfault :D");
+
+	eprint (0, "Something broke and caused a segmentation fault. Graceful shutdown attempted.");
+	kill (getpid (), sig);
+}
+
 int main (int argc, char **argv)
 {
 	int i;
@@ -169,7 +190,9 @@ int main (int argc, char **argv)
 	free (coremodule);
 
 	signal (SIGINT, sigdie);
+	signal (SIGHUP, sigdie);
 	signal (SIGTERM, sigdie);
+	signal (SIGSEGV, segvdie);
 
 	for (i = 0; i < MAXMODULES; i++)
 		if (globalcfg.modlist [i])
@@ -179,6 +202,11 @@ int main (int argc, char **argv)
 		if (clients [i])
 			if (irc_init (clients [i]))
 				irc_destroy (&clients [i]);
+
+	#ifdef DEBUG // Allow core dump in debug build
+	struct rlimit coresize = { RLIM_INFINITY, RLIM_INFINITY };
+	setrlimit (RLIMIT_CORE, &coresize);
+	#endif
 
 	// Main loop:
 	irc_service (clients);
