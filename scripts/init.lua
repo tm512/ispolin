@@ -53,3 +53,7 @@ function client:join (name, pass)
 	-- todo: create a "channel" type table
 	core.client_join (self.id, name, pass)
 end
+
+function client:privmsg (targ, msg)
+	core.client_privmsg (self.id, targ, msg)
+end

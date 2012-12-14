@@ -124,7 +124,7 @@ int luapi_client_connect (lua_State *L)
 
 int luapi_client_join (lua_State *L)
 {
-	int cln, i;
+	int i;
 	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
 
 	for (i = 0; i < MAXCHANS; i++)
@@ -142,6 +142,20 @@ int luapi_client_join (lua_State *L)
 
 	irc_join (cl, &cl->channels [i]);
 
+	return 0;
+}
+
+int luapi_client_privmsg (lua_State *L)
+{
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
+	char *target = deconst (luaL_optstring (L, 2, NULL));
+	char *message = deconst (luaL_optstring (L, 3, NULL));
+	
+	if (target && message)
+		irc_privmsg (cl, target, message);
+
+	free (target);
+	free (message);
 	return 0;
 }
 
@@ -166,6 +180,7 @@ luaL_Reg core [] =
 	{ "client_setcfg", luapi_client_setcfg },
 	{ "client_connect", luapi_client_connect },
 	{ "client_join", luapi_client_join },
+	{ "client_privmsg", luapi_client_privmsg },
 	{ "module_load", luapi_module_load },
 	{ "module_unload", luapi_module_unload }
 };
