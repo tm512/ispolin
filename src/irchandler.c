@@ -25,6 +25,7 @@
 
 #include "prints.h"
 #include "irc.h"
+#include "luapi.h"
 #include "irchandler.h"
 #include "module.h"
 
@@ -69,16 +70,9 @@ void motd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 
 void endmotd_handler (ircclient_t *cl, char *nick, char *host, char *args)
 {
-	chanlist_t *it;
+	int i;
 
-	if (cl->ns_nick && cl->ns_command)
-		irc_privmsg (cl, cl->ns_nick, "%s", cl->ns_command);
-
-	for (it = cl->channels; it; it = it->next)
-		if (strlen (it->name) && it->pass && strlen (it->pass))
-			irc_join (cl, it->name, it->pass);
-		else if (strlen (it->name))
-			irc_join (cl, it->name, NULL);
+	luapi_call (cl, "onConnect");
 
 	return;
 }

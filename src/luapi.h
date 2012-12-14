@@ -20,5 +20,6 @@
 
 void luapi_init (void);
 void luapi_loadconfig (char *path);
+void luapi_call (ircclient_t *cl, const char *method);
 
 #endif // LUAPI_H__

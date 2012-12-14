@@ -29,7 +29,6 @@
 #include "net.h"
 #include "irc.h"
 #include "module.h"
-#include "config.h"
 #include "luapi.h"
 
 #ifdef DEBUG
@@ -39,7 +38,7 @@
 ircclient_t *clients [MAXCLIENTS] = { 0 };
 char *configpath = NULL;
 char *localdir = NULL;
-config_t globalcfg;
+char *modpath = "./modules/";
 
 #define arg(longform,shortform) if (!strcmp (argv [i], longform) || !strcmp (argv [i], shortform))
 
@@ -183,9 +182,8 @@ int main (int argc, char **argv)
 
 	luapi_loadconfig (configpath);
 
-	globalcfg.modpath = "./modules/"; // fixme lol
-	coremodule = (char*) malloc (strlen (globalcfg.modpath) + 8);
-	sprintf (coremodule, "%score.so", globalcfg.modpath);
+	coremodule = (char*) malloc (strlen (modpath) + 8);
+	sprintf (coremodule, "%score.so", modpath);
 	module_load (coremodule);
 	free (coremodule);
 
@@ -193,15 +191,11 @@ int main (int argc, char **argv)
 	signal (SIGHUP, sigdie);
 	signal (SIGTERM, sigdie);
 	signal (SIGSEGV, segvdie);
-
+/*
 	for (i = 0; i < MAXMODULES; i++)
 		if (globalcfg.modlist [i])
 			module_load (globalcfg.modlist [i]);
-
-	for (i = 0; i < MAXCLIENTS; i++)
-		if (clients [i])
-			if (irc_init (clients [i]))
-				irc_destroy (&clients [i]);
+*/
 
 	#ifdef DEBUG // Allow core dump in debug build
 	struct rlimit coresize = { RLIM_INFINITY, RLIM_INFINITY };

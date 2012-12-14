@@ -19,16 +19,14 @@
 #include <string.h>
 #ifdef linux
 #include <alloca.h>
-#else
-#include <stdlib.h>
 #endif
+#include <stdlib.h>
 #include <sys/utsname.h>
 
 #include "version.h"
 
 #include "prints.h"
 #include "irc.h"
-#include "config.h"
 #include "module.h"
 
 char modname [] = "core";
@@ -36,6 +34,7 @@ char modname [] = "core";
 void die (char *msg);
 
 extern int net_recvd, net_sent;
+extern char *modpath;
 
 void ctcpHandler (ircclient_t *cl, char *nick, char *host, char *source, char *message)
 {
@@ -53,7 +52,7 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	char *buf = alloca (strlen (message) + 1);
 
 	// check for prefix:
-	if (message [0] != globalcfg.prefix && message [0] != '\001')
+	if (message [0] != cl->prefix && message [0] != '\001')
 		return;
 
 	// back up message:
@@ -83,11 +82,30 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 	if ((strstr (buf, "join ") == buf || strstr (buf, "j ") == buf) && irc_isowner (cl, host))
 	{
-		strtok_r (buf, " ", &tokbuf);
-		char *channel = strtok_r (NULL, " ", &tokbuf);
-		char *password = strtok_r (NULL, " ", &tokbuf);
+		int i;
+		for (i = 0; i < MAXCHANS; i++)
+			if (!cl->channels [i].name)
+				break;
 
-		irc_join (cl, channel, password);
+		if (i == MAXCHANS)
+		{
+			irc_privmsg (cl, source, "Channel limit already reached.");
+			return;
+		}
+
+		strtok_r (buf, " ", &tokbuf);
+		char *tmpchan = strtok_r (NULL, " ", &tokbuf);
+		char *tmppw = strtok_r (NULL, " ", &tokbuf);
+		cl->channels [i].name = malloc (strlen (tmpchan) + 1);
+		strcpy (cl->channels [i].name, tmpchan);
+
+		if (tmppw)
+		{
+			cl->channels [i].pass = malloc (strlen (tmppw) + 1);
+			strcpy (cl->channels [i].pass, tmppw);
+		}
+
+		irc_join (cl, &cl->channels [i]);
 		return;
 	}
 
@@ -105,8 +123,8 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 
 		if (strstr (modcmd, "load") == modcmd)
 		{
-			char filepath [strlen (globalcfg.modpath) + strlen (modname) + 4];
-			sprintf (filepath, "%s/%s.so", globalcfg.modpath, modname);
+			char filepath [strlen (modpath) + strlen (modname) + 4];
+			sprintf (filepath, "%s/%s.so", modpath, modname);
 
 			if (!module_load (filepath))
 				irc_notice (cl, nick, "Loaded module: %s", filepath);
@@ -127,9 +145,20 @@ void corePrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	if ((strstr (buf, "part ") == buf || strstr (buf, "p ") == buf) && irc_isowner (cl, host))
 	{
 		strtok_r (buf, " ", &tokbuf);
-		char *channel = strtok_r (NULL, " ", &tokbuf);
+		char *channame = strtok_r (NULL, " ", &tokbuf);
+		int i;
 
-		irc_part (cl, channel, "ispolin"); // todo: customizable
+		for (i = 0; i < MAXCHANS; i++)
+			if (cl->channels [i].name && !strcmp (channame, cl->channels [i].name))
+				break;
+
+		if (i == MAXCHANS)
+		{
+			irc_privmsg (cl, source, "Not joined to %s", channame);
+			return;
+		}
+
+		irc_part (cl, &cl->channels [i], "ispolin"); // todo: customizable
 		return;
 	}
 

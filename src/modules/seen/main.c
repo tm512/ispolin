@@ -28,7 +28,6 @@
 
 #include "prints.h"
 #include "irc.h"
-#include "config.h"
 #include "module.h"
 
 char modname [] = "seen";
@@ -151,7 +150,7 @@ void seenPrivmsg (ircclient_t *cl, char *nick, char *host, char *source, char *m
 	seen_entry_t *entry;
 	update_entry (nick, time (NULL));
 
-	if (message [0] == globalcfg.prefix)
+	if (message [0] == cl->prefix)
 	{
 		buf = alloca (strlen (message));
 		tokbuf = alloca (strlen (message));

@@ -25,7 +25,6 @@
 
 #include "prints.h"
 #include "irc.h"
-#include "config.h"
 #include "luapi.h"
 
 lua_State *Lst = NULL;
@@ -42,118 +41,120 @@ static char *deconst (const char *source)
 	return tmp;
 }
 
+static ircclient_t *getclient (lua_State *L, int cln)
+{
+	ircclient_t *cl;
+	if (cln >= MAXCLIENTS)
+	{
+		luaL_error (L, "Client number exceeds maximum clients");
+		return NULL;
+	}
+
+	cl = clients [cln];
+
+	if (!cl)
+	{
+		luaL_error (L, "Invalid client");
+		return NULL;
+	}
+
+	return cl;
+}
+
 // Functions to register to Lua:
 
-int luapi_setuser (lua_State *L)
+int luapi_client_new (lua_State *L)
 {
-	// setuser (nick, username, realname)
-	globalcfg.nick = deconst (luaL_checkstring (L, 1));
-	globalcfg.username = deconst (luaL_checkstring (L, 2));
-	globalcfg.realname = deconst (luaL_checkstring (L, 3));
-
-	return 0;
-}
-
-int luapi_setprefix (lua_State *L)
-{
-	// setprefix (prefix)
-
-	globalcfg.prefix = luaL_checkstring (L, 1) [0];
-
-	return 0;
-}
-
-int luapi_irc_connect (lua_State *L)
-{
-	// irc_connect (host, port, [password])
 	int i;
 
 	for (i = 0; i < MAXCLIENTS && clients [i]; i++); // find empty slot
 	if (i >= MAXCLIENTS)
 	{
 		eprint (0, "Connection to %s:%s would exceed maximum client connection count", lua_tostring (L, 1), lua_tostring (L, 2));
-		lua_pushstring (L, "Too many clients");
-		lua_error (L);
+		luaL_error (L, "Too many clients");
 	}
 
 	clients [i] = malloc (sizeof (ircclient_t));
 	memset (clients [i], 0, sizeof (ircclient_t));
+	memset (clients [i]->channels, 0, sizeof (ircchannel_t) * MAXCHANS);
 
 	clients [i]->host = deconst (luaL_checkstring (L, 1));
 	clients [i]->port = deconst (luaL_checkstring (L, 2));
-	clients [i]->nick = globalcfg.nick;
 
 	lua_pushnumber (L, i);
 	return 1;
 }
 
-int luapi_irc_setowner (lua_State *L)
+int luapi_client_ref (lua_State *L)
 {
-	int cln;
-	ircclient_t *cl;
+	// store reference to the table that an ircclient_t is represented by
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
 
-	cln = luaL_checknumber (L, 1);
-	if (cln >= MAXCLIENTS)
-	{
-		lua_pushstring (L, "Client number too high");
-		lua_error (L);
-	}
-
-	cl = clients [cln];
-	if (!cl)
-	{
-		lua_pushstring (L, "No such client");
-		lua_error (L);
-	}
-
-	cl->owner = deconst (luaL_checkstring (L, 2));
+	cl->ref = luaL_ref (L, LUA_REGISTRYINDEX);
 	return 0;
 }
 
-int luapi_irc_addchannel (lua_State *L)
+int luapi_client_setcfg (lua_State *L)
 {
-	int cln;
-	ircclient_t *cl;
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
 
-	cln = luaL_checknumber (L, 1);
-	if (cln >= MAXCLIENTS)
+	cl->nick = deconst (luaL_checkstring (L, 2));
+	cl->username = deconst (luaL_checkstring (L, 3));
+	cl->realname = deconst (luaL_checkstring (L, 4));
+	cl->prefix = luaL_checkstring (L, 5) [0];
+	cl->owner = deconst (luaL_checkstring (L, 6));
+
+	return 0;
+}
+
+int luapi_client_connect (lua_State *L)
+{
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
+	int i = luaL_checknumber (L, 1);
+
+	if (irc_init (cl))
 	{
-		lua_pushstring (L, "Client number too high");
+		lua_pushboolean (L, 0);
+		irc_destroy (&clients [i]);
+	}
+
+	lua_pushboolean (L, 1);
+	return 1;
+}
+
+int luapi_client_join (lua_State *L)
+{
+	int cln, i;
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
+
+	for (i = 0; i < MAXCHANS; i++)
+		if (!cl->channels [i].name)
+			break;
+
+	if (i == MAXCHANS)
+	{
+		lua_pushstring (L, "Exceeded maximum channel count");
 		lua_error (L);
 	}
 
-	cl = clients [cln];
-	if (!cl)
-	{
-		lua_pushstring (L, "No such client");
-		lua_error (L);
-	}
+	cl->channels [i].name = deconst (luaL_checkstring (L, 2));
+	cl->channels [i].pass = deconst (luaL_optstring (L, 3, NULL));
 
-	chanlist_t *ch;
-	if (!cl->channels)
-	{
-		cl->channels = malloc (sizeof (chanlist_t));
-		memset (cl->channels, 0, sizeof (chanlist_t));
-		ch = cl->channels;
-	}
-	else
-	{
-		ch = cl->channels;
-		while (ch->next)
-			ch = ch->next;
-
-		ch->next = malloc (sizeof (chanlist_t));
-		ch = ch->next;
-		memset (ch, 0, sizeof (chanlist_t));
-	}
-
-	ch->name = deconst (luaL_checkstring (L, 2));
-	ch->pass = deconst (luaL_optstring (L, 3, NULL));
+	irc_join (cl, &cl->channels [i]);
 
 	return 0;
 }
 
 // Functions used to control the API from C
+
+luaL_Reg core [] =
+{
+	{ "client_new", luapi_client_new },
+	{ "client_ref", luapi_client_ref },
+	{ "client_setcfg", luapi_client_setcfg },
+	{ "client_connect", luapi_client_connect },
+	{ "client_join", luapi_client_join }
+};
 
 void luapi_init (void)
 {
@@ -164,15 +165,15 @@ void luapi_init (void)
 
 	luaL_openlibs (Lst);
 
-	// bind functions
-	lua_register (Lst, "setuser", luapi_setuser);
-	lua_register (Lst, "setprefix", luapi_setprefix);
-	lua_register (Lst, "irc_connect", luapi_irc_connect);
-	lua_register (Lst, "irc_setowner", luapi_irc_setowner);
-	lua_register (Lst, "irc_addchannel", luapi_irc_addchannel);
+	// put all of the core functions into a table
+	luaL_register (Lst, "core", core);
+
+	lua_pushnumber (Lst, MAXCLIENTS);
+	lua_setglobal (Lst, "core.maxclients");
 
 	// run lua script that wraps all the functions nicely
-	luaL_dofile (Lst, "scripts/init.lua");
+	if (luaL_dofile (Lst, "scripts/init.lua"))
+		eprint (1, "Error running scripts/init.lua");
 
 	return;
 }
@@ -185,5 +186,19 @@ void luapi_loadconfig (char *path)
 	if (luaL_dofile (Lst, path))
 		eprint (1, "Error loading configuration file");
 
+	return;
+}
+
+// Call method in a client
+void luapi_call (ircclient_t *cl, const char *method)
+{
+	lua_rawgeti (Lst, LUA_REGISTRYINDEX, cl->ref);
+	lua_getfield (Lst, -1, method);
+	lua_pushvalue (Lst, -2);
+
+	if (lua_isfunction (Lst, -2))
+		lua_call (Lst, 1, 0);
+
+	lua_pop (Lst, 3);
 	return;
 }

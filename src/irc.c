@@ -27,7 +27,6 @@
 #include "net.h"
 #include "irc.h"
 #include "irchandler.h"
-#include "config.h"
 
 #undef DEBUG
 
@@ -69,7 +68,7 @@ int irc_init (ircclient_t *cl)
 		}
 
 		// Login:
-		if (irc_login (cl, cl->nick) != 0)
+		if (irc_login (cl) != 0)
 		{
 			conn_attempts ++;
 			connsleep (1 << conn_attempts);
@@ -97,20 +96,6 @@ void irc_destroy (ircclient_t **clp)
 	free (cl->ns_nick);
 	free (cl->ns_command);
 	free (cl->rbuf);
-
-	chanlist_t *it = cl->channels;
-	if (it)
-		while (1)
-		{
-			chanlist_t *next = it->next;
-			free (it->name);
-			free (it->pass);
-			free (it);
-			if (next)
-				it = next;
-			else
-				break;
-		}
 
 	free (cl);
 	*clp = NULL;
@@ -168,23 +153,28 @@ void irc_service (ircclient_t **clients)
 }
 
 // Sends NICK and USER
-int irc_login (ircclient_t *cl, char *nick)
+int irc_login (ircclient_t *cl)
 {
-	return irc_sendln (cl, "NICK %s", nick) || irc_sendln (cl, "USER %s 8 * :%s", globalcfg.username, globalcfg.realname);
+	return irc_sendln (cl, "NICK %s", cl->nick) || irc_sendln (cl, "USER %s 8 * :%s", cl->username, cl->realname);
 }
 
 // Sends JOIN (with optional password)
-int irc_join (ircclient_t *cl, char *chan, char *pw)
+int irc_join (ircclient_t *cl, ircchannel_t *chan)
 {
-	if (pw)
-		return irc_sendln (cl, "JOIN %s %s", chan, pw);
+	if (chan->pass)
+		return irc_sendln (cl, "JOIN %s %s", chan->name, chan->pass);
 	else
-		return irc_sendln (cl, "JOIN %s", chan);
+		return irc_sendln (cl, "JOIN %s", chan->name);
 }
 
-int irc_part (ircclient_t *cl, char *chan, char *msg)
+int irc_part (ircclient_t *cl, ircchannel_t *chan, char *msg)
 {
-	return irc_sendln (cl, "PART %s :%s", chan, msg);
+	int ret = irc_sendln (cl, "PART %s :%s", chan->name, msg);
+	free (chan->name);
+	free (chan->pass);
+	chan->name = chan->pass = NULL;
+
+	return ret;
 }
 
 // Sends QUIT

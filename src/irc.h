@@ -19,36 +19,42 @@
 #define IRC_H__
 
 #define MAXCLIENTS 16
+#define MAXCHANS 32
 
-typedef struct chanlist_s
+typedef struct
 {
 	char *name;
 	char *pass;
-	struct chanlist_s *next;
-} chanlist_t;
+} ircchannel_t;
 
 typedef struct
 {
 	int s; // Socket
 	char run;
+	int ref;
 
 	char *host;
 	char *port;
+
 	char *nick;
+	char *username;
+	char *realname;
+
+	char prefix;
 	char *owner;
 	char *ns_nick;
 	char *ns_command;
 
 	char *rbuf; // Receive buffer, for irc_getln
-	chanlist_t *channels;
+	ircchannel_t channels [MAXCHANS];
 } ircclient_t;
 
 int irc_init (ircclient_t *cl);
 void irc_destroy (ircclient_t **clp);
 void irc_service (ircclient_t **clients);
-int irc_login (ircclient_t *cl, char *nick);
-int irc_join (ircclient_t *cl, char *chan, char *pw);
-int irc_part (ircclient_t *cl, char *chan, char *msg);
+int irc_login (ircclient_t *cl);
+int irc_join (ircclient_t *cl, ircchannel_t *chan);
+int irc_part (ircclient_t *cl, ircchannel_t *chan, char *msg);
 int irc_privmsg (ircclient_t *cl, char *target, char *message, ...);
 int irc_notice (ircclient_t *cl, char *target, char *message, ...);
 int irc_isowner (ircclient_t *cl, char *host);

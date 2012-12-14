@@ -32,7 +32,8 @@ LDFLAGS=-L/usr/local/lib -lm -llua -export-dynamic
 endif
 
 ifneq ($(strip $(shell $(CC) -v 2>&1 | grep -i "linux")),)
-LDFLAGS=-ldl -llua
+CFLAGS=-I/usr/include/lua5.1
+LDFLAGS=-ldl -llua5.1
 endif
 
 src/version.h:
