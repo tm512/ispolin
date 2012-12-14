@@ -145,6 +145,18 @@ int luapi_client_join (lua_State *L)
 	return 0;
 }
 
+int luapi_module_load (lua_State *L)
+{
+	module_load (luaL_checkstring (L, 1));
+	return 0;
+}
+
+int luapi_module_unload (lua_State *L)
+{
+	module_unload (luaL_checkstring (L, 1));
+	return 0;
+}
+
 // Functions used to control the API from C
 
 luaL_Reg core [] =
@@ -153,7 +165,9 @@ luaL_Reg core [] =
 	{ "client_ref", luapi_client_ref },
 	{ "client_setcfg", luapi_client_setcfg },
 	{ "client_connect", luapi_client_connect },
-	{ "client_join", luapi_client_join }
+	{ "client_join", luapi_client_join },
+	{ "module_load", luapi_module_load },
+	{ "module_unload", luapi_module_unload }
 };
 
 void luapi_init (void)

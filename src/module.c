@@ -40,13 +40,13 @@ listener_t *quitListeners = NULL;
 int module_load (char *path)
 {
 	modinit_f init;
-	void *mod = dlopen (path, RTLD_LAZY);
+	void *mod;
 	module_t *it = modules;
 	char *modname;
 
 	iprint ("Loading module: %s", path);
 
-	if (!mod)
+	if (!path || !(mod = dlopen (path, RTLD_LAZY)))
 	{
 		eprint (0, "Couldn't load module %s (%s).", path, dlerror ());
 		dlclose (mod);
@@ -118,6 +118,9 @@ int module_unload (char *name)
 	module_t *it = modules;
 	void *mod = NULL;
 	moddeinit_f deinit;
+
+	if (!name)
+		return 1;
 
 	// Clear all listeners that this module has
 	module_listener_clear (name, &joinListeners);
