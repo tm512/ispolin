@@ -37,7 +37,7 @@ listener_t *quitListeners = NULL;
 
 // Loads a module, passes all of our listener lists to the modules init function
 // Returns 0 on success
-int module_load (char *path)
+module_t *module_load (char *path)
 {
 	modinit_f init;
 	void *mod;
@@ -50,7 +50,7 @@ int module_load (char *path)
 	{
 		eprint (0, "Couldn't load module %s (%s).", path, dlerror ());
 		dlclose (mod);
-		return 1;
+		return NULL;
 	}
 
 	init = (modinit_f) dlsym (mod, "init");
@@ -59,7 +59,7 @@ int module_load (char *path)
 	{
 		eprint (0, "Couldn't load init function from module %s (%s).", path, dlerror ());
 		dlclose (mod);
-		return 2;
+		return NULL;
 	}
 
 	modname = (char*) dlsym (mod, "modname");
@@ -67,7 +67,7 @@ int module_load (char *path)
 	{
 		eprint (0, "Module %s has no name.");
 		dlclose (mod);
-		return 3;
+		return NULL;
 	}
 
 	if (it) // ensure that this module isn't loaded
@@ -78,7 +78,7 @@ int module_load (char *path)
 			{
 				eprint (0, "Module %s is already loaded", modname);
 				dlclose (mod);
-				return 4;
+				return NULL;
 			}
 			it = it->next;
 		}
@@ -105,12 +105,12 @@ int module_load (char *path)
 	{
 		free (it);
 		it = NULL;
-		return 3;
+		return NULL;
 	}
 
 	init ();
 
-	return 0;
+	return it;
 }
 
 int module_unload (char *name)

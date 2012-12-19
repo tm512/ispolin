@@ -25,6 +25,7 @@
 
 #include "prints.h"
 #include "irc.h"
+#include "module.h"
 #include "luapi.h"
 
 lua_State *Lst = NULL;
@@ -145,6 +146,26 @@ int luapi_client_join (lua_State *L)
 	return 0;
 }
 
+int luapi_client_part (lua_State *L)
+{
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
+	char *channame = luaL_checkstring (L, 2);
+	int i;
+
+	for (i = 0; i < MAXCHANS; i++)
+		if (cl->channels [i].name && !strcmp (channame, cl->channels [i].name))
+			break;
+
+	if (i == MAXCHANS)
+	{
+		luaL_error (L, "Not joined to channel");
+		return;
+	}
+
+	irc_part (cl, &cl->channels [i], "ispolin"); // todo: customizable
+	return 0;
+}
+
 int luapi_client_privmsg (lua_State *L)
 {
 	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
@@ -161,8 +182,9 @@ int luapi_client_privmsg (lua_State *L)
 
 int luapi_module_load (lua_State *L)
 {
-	module_load (luaL_checkstring (L, 1));
-	return 0;
+	module_t *mod = module_load (luaL_checkstring (L, 1));
+	lua_pushstring (L, mod->modname);
+	return 1;
 }
 
 int luapi_module_unload (lua_State *L)
@@ -180,6 +202,7 @@ luaL_Reg core [] =
 	{ "client_setcfg", luapi_client_setcfg },
 	{ "client_connect", luapi_client_connect },
 	{ "client_join", luapi_client_join },
+	{ "client_part", luapi_client_part },
 	{ "client_privmsg", luapi_client_privmsg },
 	{ "module_load", luapi_module_load },
 	{ "module_unload", luapi_module_unload }

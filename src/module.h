@@ -38,7 +38,7 @@ typedef struct listener_s
 	struct listener_s *next;
 } listener_t;
 
-int module_load (char *path);
+module_t *module_load (char *path);
 int module_unload (char *name);
 void module_listener_clear (char *name, listener_t **lp);
 void module_registerfunc (listener_t **l, void *func, char *modname);

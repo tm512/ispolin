@@ -54,6 +54,25 @@ function client:join (name, pass)
 	core.client_join (self.id, name, pass)
 end
 
+function client:part (name)
+	core.client_part (self.id, name)
+end
+
 function client:privmsg (targ, msg)
 	core.client_privmsg (self.id, targ, msg)
+end
+
+module = { }
+module.__index = module
+
+function module.load (path)
+	local self = { }
+
+	self.name = core.module_load (path)
+	return self
+end
+
+function module:unload ()
+	core.module_unload (self.name)
+	self.name = nil
 end

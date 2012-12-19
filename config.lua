@@ -1,5 +1,5 @@
-core.module_load ("./modules/seen.so")
-core.module_load ("./modules/linktitle.so")
+seen = module.load ("./modules/seen.so")
+linktitle = module.load ("./modules/linktitle.so")
 
 lostsig = client.new ("irc.lostsig.net")
 lostsig.owner = "tm512@underhalls.net"
