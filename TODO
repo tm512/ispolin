@@ -3,7 +3,6 @@ incomplete ispolin roadmap
 
 - Iron out compatibility between IRCds
 - IRC text color/formatting support (\003 and friends)
-- Clean up that awful mess of a config loader :/
 - More included modules
   - Markov text chains (maybe?)
   - Games

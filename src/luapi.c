@@ -149,7 +149,7 @@ int luapi_client_join (lua_State *L)
 int luapi_client_part (lua_State *L)
 {
 	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
-	char *channame = luaL_checkstring (L, 2);
+	char *channame = deconst (luaL_checkstring (L, 2));
 	int i;
 
 	for (i = 0; i < MAXCHANS; i++)
@@ -163,6 +163,18 @@ int luapi_client_part (lua_State *L)
 	}
 
 	irc_part (cl, &cl->channels [i], "ispolin"); // todo: customizable
+	return 0;
+}
+
+int luapi_client_raw (lua_State *L)
+{
+	ircclient_t *cl = getclient (L, luaL_checknumber (L, 1));
+	char *message = deconst (luaL_optstring (L, 2, NULL));
+
+	if (message)
+		irc_sendln (cl, "%s", message);
+
+	free (message);
 	return 0;
 }
 
@@ -182,14 +194,20 @@ int luapi_client_privmsg (lua_State *L)
 
 int luapi_module_load (lua_State *L)
 {
-	module_t *mod = module_load (luaL_checkstring (L, 1));
+	char *path = deconst (luaL_checkstring (L, 1));
+	module_t *mod = module_load (path);
 	lua_pushstring (L, mod->modname);
+
+	free (path);
 	return 1;
 }
 
 int luapi_module_unload (lua_State *L)
 {
-	module_unload (luaL_checkstring (L, 1));
+	char *name = deconst (luaL_checkstring (L, 1));
+	module_unload (name);
+
+	free (name);
 	return 0;
 }
 
@@ -203,6 +221,7 @@ luaL_Reg core [] =
 	{ "client_connect", luapi_client_connect },
 	{ "client_join", luapi_client_join },
 	{ "client_part", luapi_client_part },
+	{ "client_raw", luapi_client_raw },
 	{ "client_privmsg", luapi_client_privmsg },
 	{ "module_load", luapi_module_load },
 	{ "module_unload", luapi_module_unload }

@@ -20,6 +20,9 @@
 client = { }
 client.__index = client
 
+channel = { }
+channel.__index = channel
+
 function client.new (host, port)
 	local self = { }
 	setmetatable (self, client)
@@ -37,6 +40,18 @@ function client.new (host, port)
 	self.prefix = "."
 	self.owner = ""
 
+	self.channels = { }
+
+	return self
+end
+
+function channel.new (cl, name)
+	local self = { }
+	setmetatable (self, channel)
+
+	self.cl = cl
+	self.name = name
+
 	return self
 end
 
@@ -50,16 +65,30 @@ function client:connect ()
 end
 
 function client:join (name, pass)
-	-- todo: create a "channel" type table
 	core.client_join (self.id, name, pass)
+	self.channels [name] = channel.new (self, name)
+	return self.channels [name] -- return the newly added channel
 end
 
 function client:part (name)
 	core.client_part (self.id, name)
+	self.channels [name] = nil
+end
+
+function client:raw (msg)
+	core.client_raw (self.id, msg)
 end
 
 function client:privmsg (targ, msg)
 	core.client_privmsg (self.id, targ, msg)
+end
+
+function channel:part ()
+	self.cl:part (self.name)
+end
+
+function channel:privmsg (msg)
+	self.cl:privmsg (self.name, msg)
 end
 
 module = { }

@@ -191,11 +191,6 @@ int main (int argc, char **argv)
 	signal (SIGHUP, sigdie);
 	signal (SIGTERM, sigdie);
 	signal (SIGSEGV, segvdie);
-/*
-	for (i = 0; i < MAXMODULES; i++)
-		if (globalcfg.modlist [i])
-			module_load (globalcfg.modlist [i]);
-*/
 
 	#ifdef DEBUG // Allow core dump in debug build
 	struct rlimit coresize = { RLIM_INFINITY, RLIM_INFINITY };
