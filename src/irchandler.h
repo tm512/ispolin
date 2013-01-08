@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2013 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as
@@ -40,7 +40,7 @@ void privmsg_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void quit_handler (ircclient_t *cl, char *nick, char *host, char *args);
 void topic_set_handler (ircclient_t *cl, char *nick, char *host, char *args);
 
-static const irchandler_t irchandlers [] = 
+static const irchandler_t irchandlers [] =
 {
 	{ "332", topic_get_handler },
 	{ "333", topic_info_handler },

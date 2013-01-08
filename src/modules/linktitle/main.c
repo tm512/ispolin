@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2013 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as
@@ -15,7 +15,7 @@
    along with Ispolin.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// The following source file is a good reason why manipulating 
+// The following source file is a good reason why manipulating
 // strings in C is a horrible idea.
 
 #define _GNU_SOURCE // :S

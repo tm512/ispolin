@@ -1,6 +1,6 @@
 /*
    ispolin
-   Copyright [c] 2011-2012 tm512 (Kyle Davis), All Rights Reserved.
+   Copyright [c] 2011-2013 tm512 (Kyle Davis), All Rights Reserved.
 
    Ispolin is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 3, as
@@ -137,7 +137,7 @@ int module_unload (char *name)
 		{
 			if (it == modules) // if this is the first in the list
 				modules = it->next; // move the start of the list forward
-			else // we need to find the previous 
+			else // we need to find the previous
 			{
 				while (prev->next != it)
 					prev = prev->next;
