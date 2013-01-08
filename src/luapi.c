@@ -224,7 +224,8 @@ luaL_Reg core [] =
 	{ "client_raw", luapi_client_raw },
 	{ "client_privmsg", luapi_client_privmsg },
 	{ "module_load", luapi_module_load },
-	{ "module_unload", luapi_module_unload }
+	{ "module_unload", luapi_module_unload },
+	{ NULL, NULL }
 };
 
 void luapi_init (void)
